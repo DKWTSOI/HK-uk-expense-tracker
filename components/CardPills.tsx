@@ -1,5 +1,5 @@
 'use client'
-import { CARDS } from '@/lib/constants'
+import { CARDS, CARD_EMOJI } from '@/lib/constants'
 
 interface Props {
   value: string
@@ -14,13 +14,14 @@ export default function CardPills({ value, onChange }: Props) {
           key={card}
           type="button"
           onClick={() => onChange(card)}
-          className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+          className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-sm transition-all ${
             value === card
-              ? 'bg-gray-900 text-white'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              ? 'bg-stone-800 text-white'
+              : 'text-gray-400 hover:text-gray-600'
           }`}
         >
-          {card}
+          <span>{CARD_EMOJI[card]}</span>
+          <span>{card}</span>
         </button>
       ))}
     </div>
