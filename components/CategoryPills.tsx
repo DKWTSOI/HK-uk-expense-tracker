@@ -1,5 +1,5 @@
 'use client'
-import { CATEGORIES } from '@/lib/constants'
+import { CATEGORIES, CATEGORY_EMOJI } from '@/lib/constants'
 
 interface Props {
   value: string
@@ -14,13 +14,14 @@ export default function CategoryPills({ value, onChange }: Props) {
           key={cat}
           type="button"
           onClick={() => onChange(cat)}
-          className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+          className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-sm transition-all ${
             value === cat
-              ? 'bg-gray-900 text-white'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              ? 'bg-stone-800 text-white'
+              : 'text-gray-400 hover:text-gray-600'
           }`}
         >
-          {cat}
+          <span>{CATEGORY_EMOJI[cat]}</span>
+          <span>{cat}</span>
         </button>
       ))}
     </div>
