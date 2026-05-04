@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import LogForm from '@/components/LogForm'
 import Link from 'next/link'
 
