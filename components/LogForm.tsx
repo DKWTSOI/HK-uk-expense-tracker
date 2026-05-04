@@ -43,12 +43,12 @@ export default function LogForm() {
     : null
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-5">
       {/* Amount + Currency */}
-      <div>
-        <div className="flex items-center gap-3 mb-2">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+        <div className="flex items-center gap-3">
           <div className="flex-1 relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-3xl font-light text-zinc-400">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-3xl font-light text-gray-300">
               {currency === 'GBP' ? '£' : 'HK$'}
             </span>
             <input
@@ -59,17 +59,19 @@ export default function LogForm() {
               placeholder="0.00"
               value={amount}
               onChange={e => setAmount(e.target.value)}
-              className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl pl-12 pr-4 py-5 text-4xl font-light text-white placeholder-zinc-700 focus:outline-none focus:border-zinc-600"
+              className="w-full bg-transparent pl-10 pr-2 py-3 text-4xl font-light text-gray-900 placeholder-gray-200 focus:outline-none"
             />
           </div>
-          <div className="flex bg-zinc-900 rounded-2xl p-1 border border-zinc-800">
+          <div className="flex bg-gray-100 rounded-xl p-1">
             {(['GBP', 'HKD'] as const).map(c => (
               <button
                 key={c}
                 type="button"
                 onClick={() => setCurrency(c)}
-                className={`px-4 py-3 rounded-xl text-sm font-semibold transition-colors ${
-                  currency === c ? 'bg-white text-zinc-950' : 'text-zinc-400'
+                className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all ${
+                  currency === c
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-500'
                 }`}
               >
                 {c}
@@ -78,48 +80,48 @@ export default function LogForm() {
           </div>
         </div>
         {gbpPreview && (
-          <p className="text-zinc-500 text-sm pl-1">{gbpPreview} GBP</p>
+          <p className="text-gray-400 text-sm mt-1 pl-1">{gbpPreview} GBP</p>
         )}
       </div>
 
       {/* Category */}
-      <div>
-        <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-3">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+        <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
           Category
         </label>
         <CategoryPills value={category} onChange={setCategory} />
       </div>
 
       {/* Card */}
-      <div>
-        <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-3">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+        <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
           Card
         </label>
         <CardPills value={card} onChange={setCard} />
       </div>
 
       {/* Date */}
-      <div>
-        <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-3">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+        <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
           Date
         </label>
         <input
           type="date"
           value={date}
           onChange={e => setDate(e.target.value)}
-          className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-4 text-white text-base focus:outline-none focus:border-zinc-600 [color-scheme:dark]"
+          className="w-full bg-transparent text-gray-900 text-base focus:outline-none"
         />
       </div>
 
-      {error && <p className="text-red-400 text-sm">{error}</p>}
+      {error && <p className="text-red-500 text-sm px-1">{error}</p>}
 
       <button
         type="submit"
         disabled={loading || !amount}
-        className={`w-full rounded-2xl py-5 text-lg font-semibold transition-all ${
+        className={`w-full rounded-2xl py-4 text-base font-semibold transition-all ${
           success
             ? 'bg-green-500 text-white'
-            : 'bg-white text-zinc-950 disabled:opacity-40'
+            : 'bg-gray-900 text-white disabled:opacity-30 hover:bg-gray-800'
         }`}
       >
         {success ? '✓ Logged!' : loading ? 'Logging…' : 'Log it'}

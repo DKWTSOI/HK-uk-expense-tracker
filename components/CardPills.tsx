@@ -14,10 +14,10 @@ export default function CardPills({ value, onChange }: Props) {
           key={card}
           type="button"
           onClick={() => onChange(card)}
-          className={`px-3 py-2 rounded-full text-sm font-medium transition-colors ${
+          className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
             value === card
-              ? 'bg-white text-zinc-950'
-              : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
+              ? 'bg-gray-900 text-white'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
           }`}
         >
           {card}

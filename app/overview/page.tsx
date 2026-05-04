@@ -73,53 +73,53 @@ export default function OverviewPage() {
   })
 
   return (
-    <div className="min-h-screen bg-zinc-950 pb-16">
+    <div className="min-h-screen bg-gray-50 pb-16">
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-14 pb-6">
-        <Link href="/" className="text-zinc-400 text-sm hover:text-white transition-colors">
+        <Link href="/" className="text-gray-500 text-sm hover:text-gray-900 transition-colors">
           ← Log
         </Link>
-        <h1 className="text-xl font-semibold text-white">Overview</h1>
+        <h1 className="text-xl font-semibold text-gray-900">Overview</h1>
         <div className="w-10" />
       </div>
 
-      <div className="px-4 space-y-6">
+      <div className="px-4 space-y-4">
         <MonthPicker value={month} onChange={setMonth} />
 
         {loading ? (
-          <p className="text-zinc-500 text-sm">Loading…</p>
+          <p className="text-gray-400 text-sm">Loading…</p>
         ) : expenses.length === 0 ? (
-          <p className="text-zinc-500 text-sm">No expenses for {monthLabel}.</p>
+          <p className="text-gray-400 text-sm">No expenses for {monthLabel}.</p>
         ) : (
           <>
             {/* Total */}
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
-              <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
                 Total spent
               </p>
-              <p className="text-4xl font-light text-white">£{total.toFixed(2)}</p>
-              <p className="text-zinc-500 text-sm mt-1">{expenses.length} transactions</p>
+              <p className="text-4xl font-light text-gray-900">£{total.toFixed(2)}</p>
+              <p className="text-gray-400 text-sm mt-1">{expenses.length} transactions</p>
             </div>
 
             {/* By category */}
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
-              <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-4">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">
                 By Category
               </p>
               <SpendingChart data={categoryData} />
               <div className="mt-3 space-y-2">
                 {categoryData.map(({ name, amount }) => (
                   <div key={name} className="flex justify-between text-sm">
-                    <span className="text-zinc-400">{name}</span>
-                    <span className="text-white font-medium">£{amount.toFixed(2)}</span>
+                    <span className="text-gray-500">{name}</span>
+                    <span className="text-gray-900 font-medium">£{amount.toFixed(2)}</span>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* By card */}
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
-              <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-3">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
                 By Card
               </p>
               <div className="space-y-2">
@@ -127,21 +127,21 @@ export default function OverviewPage() {
                   .sort((a, b) => b[1] - a[1])
                   .map(([card, amount]) => (
                     <div key={card} className="flex justify-between text-sm">
-                      <span className="text-zinc-400">{card}</span>
-                      <span className="text-white font-medium">£{amount.toFixed(2)}</span>
+                      <span className="text-gray-500">{card}</span>
+                      <span className="text-gray-900 font-medium">£{amount.toFixed(2)}</span>
                     </div>
                   ))}
               </div>
             </div>
 
-            {/* Analyse button */}
+            {/* Analyse */}
             {!analysis && (
               <button
                 onClick={analyse}
                 disabled={analysing}
-                className="w-full bg-zinc-800 hover:bg-zinc-700 text-white rounded-2xl py-4 font-medium text-base transition-colors disabled:opacity-50"
+                className="w-full bg-white border border-gray-200 hover:border-gray-300 text-gray-700 rounded-2xl py-4 font-medium text-base transition-all shadow-sm disabled:opacity-50 hover:shadow"
               >
-                {analysing ? 'Analysing…' : 'Analyse this month'}
+                {analysing ? 'Analysing…' : '✦ Analyse this month'}
               </button>
             )}
             {analysis && <AnalysisCard text={analysis} />}
