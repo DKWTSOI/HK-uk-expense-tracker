@@ -13,6 +13,19 @@ export const CATEGORIES = [
   'Other',
 ] as const
 
+export const CATEGORY_EMOJI: Record<string, string> = {
+  'Food & Drink': '🍜',
+  'Groceries': '🛒',
+  'Transport': '🚇',
+  'Bills & Utilities': '💡',
+  'Shopping': '🛍️',
+  'Health & Beauty': '🌿',
+  'Entertainment': '🎬',
+  'Investment / ISA': '📈',
+  'Travel': '✈️',
+  'Other': '📦',
+}
+
 export const CARDS = [
   'HK Card (HSBC HK)',
   'Barclaycard Avios',
@@ -21,3 +34,12 @@ export const CARDS = [
   'Klarna',
   'Cash',
 ] as const
+
+export const CARD_EMOJI: Record<string, string> = {
+  'HK Card (HSBC HK)': '🏦',
+  'Barclaycard Avios': '✈️',
+  'Amex': '💳',
+  'Chase': '🐇',
+  'Klarna': '🛍️',
+  'Cash': '💵',
+}
