@@ -29,7 +29,8 @@ export default function SpendingChart({ data }: Props) {
           contentStyle={{ background: '#18181b', border: '1px solid #3f3f46', borderRadius: 8 }}
           labelStyle={{ color: '#e4e4e7' }}
           itemStyle={{ color: '#a1a1aa' }}
-          formatter={(v: number) => [`£${v.toFixed(2)}`, 'Spent']}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          formatter={(v: any) => [`£${Number(v).toFixed(2)}`, 'Spent']}
         />
         <Bar dataKey="amount" radius={[4, 4, 0, 0]}>
           {data.map((_, i) => (
