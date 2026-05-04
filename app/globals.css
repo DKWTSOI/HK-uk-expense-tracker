@@ -4,4 +4,9 @@
 
 html {
   -webkit-tap-highlight-color: transparent;
+  background-color: #faf9f7;
+}
+
+body {
+  background-color: #faf9f7;
 }
