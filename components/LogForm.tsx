@@ -5,8 +5,20 @@ import PaymentPills from './PaymentPills'
 import { CATEGORIES, PAYMENT_METHODS } from '@/lib/constants'
 
 // In-memory last-used selections (persists within a browser session)
-let lastCategories: string[] = [CATEGORIES[0]]
-let lastPaymentMethods: string[] = [PAYMENT_METHODS[0]]
+let lastCategories: string[] = []
+let lastPaymentMethods: string[] = []
+
+function evalAmount(expr: string): number | null {
+  const clean = expr.replace(/[^0-9+\-*.]/g, '')
+  if (!clean) return null
+  try {
+    // eslint-disable-next-line no-new-func
+    const result = Function(`"use strict"; return (${clean})`)()
+    return typeof result === 'number' && isFinite(result) && result > 0 ? result : null
+  } catch {
+    return null
+  }
+}
 
 export default function LogForm() {
   const today = new Date().toISOString().split('T')[0]
@@ -24,11 +36,13 @@ export default function LogForm() {
     amountRef.current?.focus()
   }, [])
 
-  const isValid = amount && parseFloat(amount) > 0 && categories.length > 0 && paymentMethods.length > 0
+  const evalResult = evalAmount(amount)
+  const isExpression = amount.includes('+') || amount.includes('-') || amount.includes('*')
+  const isValid = evalResult !== null && categories.length > 0 && paymentMethods.length > 0
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!isValid) return
+    if (!isValid || evalResult === null) return
     setLoading(true)
     setError('')
 
@@ -36,7 +50,7 @@ export default function LogForm() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        amount: parseFloat(amount),
+        amount: evalResult,
         currency,
         categories,
         payment_methods: paymentMethods,
@@ -63,8 +77,8 @@ export default function LogForm() {
     }
   }
 
-  const gbpPreview = currency === 'HKD' && amount
-    ? `≈ £${(parseFloat(amount) * 0.1).toFixed(2)}`
+  const gbpPreview = currency === 'HKD' && evalResult
+    ? `≈ £${(evalResult * 0.1).toFixed(2)}`
     : null
 
   return (
@@ -77,10 +91,8 @@ export default function LogForm() {
           </span>
           <input
             ref={amountRef}
-            type="number"
+            type="text"
             inputMode="decimal"
-            step="0.01"
-            min="0"
             placeholder="0"
             value={amount}
             onChange={e => setAmount(e.target.value)}
@@ -102,6 +114,9 @@ export default function LogForm() {
               </button>
             </span>
           ))}
+          {isExpression && evalResult && (
+            <span className="text-gray-500 text-xs ml-1">= {currency === 'GBP' ? '£' : 'HK$'}{evalResult.toFixed(2)}</span>
+          )}
           {gbpPreview && (
             <span className="text-gray-400 text-xs ml-1">{gbpPreview}</span>
           )}
