@@ -38,30 +38,37 @@ export default function RecentExpenses({ refreshKey }: Props) {
     <div className="mt-2 border-t border-gray-100 pt-5">
       <p className="text-xs text-gray-300 uppercase tracking-widest mb-3">Recent</p>
       <div className="space-y-0">
-        {expenses.map((e, i) => (
-          <div
-            key={e.id}
-            className={`flex items-center justify-between py-3 ${
-              i < expenses.length - 1 ? 'border-b border-gray-50' : ''
-            }`}
-          >
-            <div className="flex-1 min-w-0">
-              <p className="text-sm text-gray-600 truncate">
-                {e.categories.map(c => CATEGORY_EMOJI[c] || '📦').join(' ')} {e.categories.join(', ')}
-              </p>
-              <p className="text-xs text-gray-300 mt-0.5">{e.date}</p>
+        {expenses.map((e, i) => {
+          const isCredit = e.type === 'refund' || e.type === 'cashback'
+          return (
+            <div
+              key={e.id}
+              className={`flex items-center justify-between py-3 ${
+                i < expenses.length - 1 ? 'border-b border-gray-50' : ''
+              }`}
+            >
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-gray-600 truncate">
+                  {e.categories.map(c => CATEGORY_EMOJI[c] || '📦').join(' ')} {e.categories.join(', ')}
+                </p>
+                <p className="text-xs text-gray-300 mt-0.5">
+                  {e.date}{e.type !== 'expense' && <span className="ml-1.5 capitalize">{e.type}</span>}
+                </p>
+              </div>
+              <div className="flex items-center gap-3 ml-3">
+                <span className={`text-sm font-medium ${isCredit ? 'text-green-600' : 'text-gray-900'}`}>
+                  {isCredit ? '+' : ''}£{e.amount_gbp.toFixed(2)}
+                </span>
+                <button
+                  onClick={() => deleteExpense(e.id)}
+                  className="text-gray-200 hover:text-red-400 transition-colors text-lg leading-none"
+                >
+                  ×
+                </button>
+              </div>
             </div>
-            <div className="flex items-center gap-3 ml-3">
-              <span className="text-sm font-medium text-gray-900">£{e.amount_gbp.toFixed(2)}</span>
-              <button
-                onClick={() => deleteExpense(e.id)}
-                className="text-gray-200 hover:text-red-400 transition-colors text-lg leading-none"
-              >
-                ×
-              </button>
-            </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )

@@ -1,3 +1,5 @@
+export type ExpenseType = 'expense' | 'refund' | 'cashback'
+
 export interface Expense {
   id: string
   amount: number
@@ -5,6 +7,7 @@ export interface Expense {
   amount_gbp: number
   categories: string[]
   payment_methods: string[]
+  type: ExpenseType
   date: string
   created_at: string
 }

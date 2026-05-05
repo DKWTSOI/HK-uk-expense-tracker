@@ -8,7 +8,7 @@ export async function POST(request: Request) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await request.json()
-  const { amount, currency, categories, payment_methods, date } = body
+  const { amount, currency, categories, payment_methods, type, date } = body
 
   if (!amount || !currency || !date) {
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
@@ -19,6 +19,7 @@ export async function POST(request: Request) {
   if (!Array.isArray(payment_methods) || payment_methods.length === 0) {
     return NextResponse.json({ error: 'Select at least one payment method' }, { status: 400 })
   }
+  const expenseType = ['expense', 'refund', 'cashback'].includes(type) ? type : 'expense'
 
   const amount_gbp = currency === 'HKD' ? amount * HKD_TO_GBP : amount
 
@@ -28,6 +29,7 @@ export async function POST(request: Request) {
     amount_gbp,
     categories,
     payment_methods,
+    type: expenseType,
     date,
   }).select().single()
 

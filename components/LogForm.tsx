@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from 'react'
 import CategoryPills from './CategoryPills'
 import PaymentPills from './PaymentPills'
 import RecentExpenses from './RecentExpenses'
+import { ExpenseType } from '@/lib/types'
 
 // In-memory last-used selections (persists within a browser session)
 let lastCategories: string[] = []
@@ -24,6 +25,7 @@ export default function LogForm() {
   const today = new Date().toISOString().split('T')[0]
   const [amount, setAmount] = useState('')
   const [currency, setCurrency] = useState<'GBP' | 'HKD'>('GBP')
+  const [type, setType] = useState<ExpenseType>('expense')
   const [categories, setCategories] = useState<string[]>(lastCategories)
   const [paymentMethods, setPaymentMethods] = useState<string[]>(lastPaymentMethods)
   const [date, setDate] = useState(today)
@@ -53,6 +55,7 @@ export default function LogForm() {
       body: JSON.stringify({
         amount: evalResult,
         currency,
+        type,
         categories,
         payment_methods: paymentMethods,
         date,
@@ -98,7 +101,9 @@ export default function LogForm() {
             placeholder="0"
             value={amount}
             onChange={e => setAmount(e.target.value)}
-            className="w-full bg-transparent pl-10 text-6xl font-thin text-gray-900 placeholder-gray-200 focus:outline-none"
+            className={`w-full bg-transparent pl-10 text-6xl font-thin placeholder-gray-200 focus:outline-none ${
+              type !== 'expense' ? 'text-green-600' : 'text-gray-900'
+            }`}
           />
         </div>
         <div className="flex items-center gap-3 mt-3 pl-1">
@@ -122,6 +127,24 @@ export default function LogForm() {
           {gbpPreview && (
             <span className="text-gray-400 text-xs ml-1">{gbpPreview}</span>
           )}
+        </div>
+      </div>
+
+      {/* Type */}
+      <div className="py-5 border-b border-gray-100">
+        <div className="flex gap-4">
+          {([['expense', 'Expense'], ['refund', 'Refund'], ['cashback', 'Cashback']] as const).map(([val, label]) => (
+            <button
+              key={val}
+              type="button"
+              onClick={() => setType(val)}
+              className={`text-sm font-medium transition-colors ${
+                type === val ? 'text-stone-800' : 'text-gray-300'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
         </div>
       </div>
 

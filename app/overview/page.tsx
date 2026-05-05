@@ -41,12 +41,13 @@ export default function OverviewPage() {
 
   useEffect(() => { fetchExpenses(month) }, [month, fetchExpenses])
 
-  const total = expenses.reduce((s, e) => s + e.amount_gbp, 0)
+  const sign = (e: { type?: string }) => (e.type === 'refund' || e.type === 'cashback') ? -1 : 1
+  const total = expenses.reduce((s, e) => s + e.amount_gbp * sign(e), 0)
 
   // Flatten categories array, split amount_gbp equally
   const byCategory = expenses.reduce<Record<string, number>>((acc, e) => {
     const cats = e.categories ?? []
-    const share = cats.length > 0 ? e.amount_gbp / cats.length : e.amount_gbp
+    const share = (cats.length > 0 ? e.amount_gbp / cats.length : e.amount_gbp) * sign(e)
     cats.forEach(cat => {
       acc[cat] = (acc[cat] || 0) + share
     })
@@ -59,7 +60,7 @@ export default function OverviewPage() {
   // Flatten payment_methods array, split equally
   const byPayment = expenses.reduce<Record<string, number>>((acc, e) => {
     const methods = e.payment_methods ?? []
-    const share = methods.length > 0 ? e.amount_gbp / methods.length : e.amount_gbp
+    const share = (methods.length > 0 ? e.amount_gbp / methods.length : e.amount_gbp) * sign(e)
     methods.forEach(m => {
       acc[m] = (acc[m] || 0) + share
     })
