@@ -43,89 +43,83 @@ export default function LogForm() {
     : null
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      {/* Amount + Currency */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-        <div className="flex items-center gap-3">
-          <div className="flex-1 relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-3xl font-light text-gray-300">
-              {currency === 'GBP' ? '£' : 'HK$'}
-            </span>
-            <input
-              type="number"
-              inputMode="decimal"
-              step="0.01"
-              min="0"
-              placeholder="0.00"
-              value={amount}
-              onChange={e => setAmount(e.target.value)}
-              className="w-full bg-transparent pl-10 pr-2 py-3 text-4xl font-light text-gray-900 placeholder-gray-200 focus:outline-none"
-            />
-          </div>
-          <div className="flex bg-gray-100 rounded-xl p-1">
-            {(['GBP', 'HKD'] as const).map(c => (
+    <form onSubmit={handleSubmit}>
+      {/* Amount */}
+      <div className="py-5 border-b border-gray-100">
+        <div className="relative">
+          <span className="absolute left-0 top-1/2 -translate-y-1/2 text-5xl font-thin text-gray-200 pointer-events-none select-none">
+            {currency === 'GBP' ? '£' : 'HK$'}
+          </span>
+          <input
+            type="number"
+            inputMode="decimal"
+            step="0.01"
+            min="0"
+            placeholder="0"
+            value={amount}
+            onChange={e => setAmount(e.target.value)}
+            className="w-full bg-transparent pl-10 text-6xl font-thin text-gray-900 placeholder-gray-200 focus:outline-none"
+          />
+        </div>
+        <div className="flex items-center gap-3 mt-3 pl-1">
+          {(['GBP', 'HKD'] as const).map((c, i) => (
+            <span key={c} className="flex items-center gap-3">
+              {i > 0 && <span className="text-gray-200 text-xs select-none">·</span>}
               <button
-                key={c}
                 type="button"
                 onClick={() => setCurrency(c)}
-                className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all ${
-                  currency === c
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-500'
+                className={`text-sm font-medium transition-colors ${
+                  currency === c ? 'text-stone-800' : 'text-gray-300'
                 }`}
               >
                 {c}
               </button>
-            ))}
-          </div>
+            </span>
+          ))}
+          {gbpPreview && (
+            <span className="text-gray-400 text-xs ml-1">{gbpPreview}</span>
+          )}
         </div>
-        {gbpPreview && (
-          <p className="text-gray-400 text-sm mt-1 pl-1">{gbpPreview} GBP</p>
-        )}
       </div>
 
       {/* Category */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-        <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-          Category
-        </label>
+      <div className="py-5 border-b border-gray-100">
+        <p className="text-xs text-gray-300 uppercase tracking-widest mb-3">Category</p>
         <CategoryPills value={category} onChange={setCategory} />
       </div>
 
       {/* Card */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-        <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-          Card
-        </label>
+      <div className="py-5 border-b border-gray-100">
+        <p className="text-xs text-gray-300 uppercase tracking-widest mb-3">Card</p>
         <CardPills value={card} onChange={setCard} />
       </div>
 
       {/* Date */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-        <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-          Date
-        </label>
+      <div className="py-5 border-b border-gray-100 flex items-center justify-between">
+        <p className="text-xs text-gray-300 uppercase tracking-widest">Date</p>
         <input
           type="date"
           value={date}
           onChange={e => setDate(e.target.value)}
-          className="w-full bg-transparent text-gray-900 text-base focus:outline-none"
+          className="bg-transparent text-gray-600 text-sm text-right focus:outline-none"
         />
       </div>
 
-      {error && <p className="text-red-500 text-sm px-1">{error}</p>}
+      {error && <p className="text-red-400 text-sm mt-4">{error}</p>}
 
-      <button
-        type="submit"
-        disabled={loading || !amount}
-        className={`w-full rounded-2xl py-4 text-base font-semibold transition-all ${
-          success
-            ? 'bg-green-500 text-white'
-            : 'bg-gray-900 text-white disabled:opacity-30 hover:bg-gray-800'
-        }`}
-      >
-        {success ? '✓ Logged!' : loading ? 'Logging…' : 'Log it'}
-      </button>
+      <div className="pt-6">
+        <button
+          type="submit"
+          disabled={loading || !amount}
+          className={`w-full rounded-2xl py-4 text-base font-medium transition-all ${
+            success
+              ? 'bg-green-500 text-white'
+              : 'bg-stone-900 text-white disabled:opacity-25 hover:bg-stone-800'
+          }`}
+        >
+          {success ? '✓ Logged' : loading ? 'Logging…' : 'Log it'}
+        </button>
+      </div>
     </form>
   )
 }
