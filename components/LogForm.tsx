@@ -1,37 +1,62 @@
 'use client'
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import CategoryPills from './CategoryPills'
-import CardPills from './CardPills'
-import { CATEGORIES, CARDS } from '@/lib/constants'
+import PaymentPills from './PaymentPills'
+import { CATEGORIES, PAYMENT_METHODS } from '@/lib/constants'
+
+// In-memory last-used selections (persists within a browser session)
+let lastCategories: string[] = [CATEGORIES[0]]
+let lastPaymentMethods: string[] = [PAYMENT_METHODS[0]]
 
 export default function LogForm() {
   const today = new Date().toISOString().split('T')[0]
   const [amount, setAmount] = useState('')
   const [currency, setCurrency] = useState<'GBP' | 'HKD'>('GBP')
-  const [category, setCategory] = useState<string>(CATEGORIES[0])
-  const [card, setCard] = useState<string>(CARDS[0])
+  const [categories, setCategories] = useState<string[]>(lastCategories)
+  const [paymentMethods, setPaymentMethods] = useState<string[]>(lastPaymentMethods)
   const [date, setDate] = useState(today)
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
+  const amountRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    amountRef.current?.focus()
+  }, [])
+
+  const isValid = amount && parseFloat(amount) > 0 && categories.length > 0 && paymentMethods.length > 0
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!amount || parseFloat(amount) <= 0) return
+    if (!isValid) return
     setLoading(true)
     setError('')
 
     const res = await fetch('/api/expenses', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ amount: parseFloat(amount), currency, category, card, date }),
+      body: JSON.stringify({
+        amount: parseFloat(amount),
+        currency,
+        categories,
+        payment_methods: paymentMethods,
+        date,
+      }),
     })
 
     setLoading(false)
     if (res.ok) {
+      lastCategories = categories
+      lastPaymentMethods = paymentMethods
+
       setSuccess(true)
-      setAmount('')
-      setTimeout(() => setSuccess(false), 2000)
+      setTimeout(() => {
+        setSuccess(false)
+        setAmount('')
+        setCategories(lastCategories)
+        setPaymentMethods(lastPaymentMethods)
+        amountRef.current?.focus()
+      }, 1500)
     } else {
       const data = await res.json()
       setError(data.error || 'Something went wrong')
@@ -43,7 +68,7 @@ export default function LogForm() {
     : null
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className="pb-28">
       {/* Amount */}
       <div className="py-5 border-b border-gray-100">
         <div className="relative">
@@ -51,6 +76,7 @@ export default function LogForm() {
             {currency === 'GBP' ? '£' : 'HK$'}
           </span>
           <input
+            ref={amountRef}
             type="number"
             inputMode="decimal"
             step="0.01"
@@ -85,13 +111,13 @@ export default function LogForm() {
       {/* Category */}
       <div className="py-5 border-b border-gray-100">
         <p className="text-xs text-gray-300 uppercase tracking-widest mb-3">Category</p>
-        <CategoryPills value={category} onChange={setCategory} />
+        <CategoryPills value={categories} onChange={setCategories} />
       </div>
 
-      {/* Card */}
+      {/* Payment Method */}
       <div className="py-5 border-b border-gray-100">
-        <p className="text-xs text-gray-300 uppercase tracking-widest mb-3">Card</p>
-        <CardPills value={card} onChange={setCard} />
+        <p className="text-xs text-gray-300 uppercase tracking-widest mb-3">Payment Method</p>
+        <PaymentPills value={paymentMethods} onChange={setPaymentMethods} />
       </div>
 
       {/* Date */}
@@ -105,16 +131,17 @@ export default function LogForm() {
         />
       </div>
 
-      {error && <p className="text-red-400 text-sm mt-4">{error}</p>}
+      {error && <p className="text-red-400 text-sm mt-4 px-1">{error}</p>}
 
-      <div className="pt-6">
+      {/* Sticky submit button */}
+      <div className="fixed bottom-0 left-0 right-0 px-5 pb-8 pt-4 bg-gradient-to-t from-[#faf9f7] via-[#faf9f7] to-transparent">
         <button
           type="submit"
-          disabled={loading || !amount}
+          disabled={loading || !isValid}
           className={`w-full rounded-2xl py-4 text-base font-medium transition-all ${
             success
-              ? 'bg-green-500 text-white'
-              : 'bg-stone-900 text-white disabled:opacity-25 hover:bg-stone-800'
+              ? 'bg-green-500 text-white scale-[0.98]'
+              : 'bg-stone-900 text-white disabled:opacity-25 hover:bg-stone-800 active:scale-[0.98]'
           }`}
         >
           {success ? '✓ Logged' : loading ? 'Logging…' : 'Log it'}

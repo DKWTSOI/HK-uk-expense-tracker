@@ -3,8 +3,8 @@ export interface Expense {
   amount: number
   currency: 'GBP' | 'HKD'
   amount_gbp: number
-  category: string
-  card: string
+  categories: string[]
+  payment_methods: string[]
   date: string
   created_at: string
 }

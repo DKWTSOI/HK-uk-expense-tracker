@@ -1,4 +1,4 @@
-export const HKD_TO_GBP = 0.1 // hardcoded: 10 HKD = 1 GBP
+export const HKD_TO_GBP = 0.1
 
 export const CATEGORIES = [
   'Food & Drink',
@@ -26,20 +26,45 @@ export const CATEGORY_EMOJI: Record<string, string> = {
   'Other': '📦',
 }
 
-export const CARDS = [
-  'HK Card (HSBC HK)',
-  'Barclaycard Avios',
-  'Amex',
-  'Chase',
-  'Klarna',
-  'Cash',
-] as const
+export const PAYMENT_METHOD_GROUPS: { label: string; methods: string[] }[] = [
+  {
+    label: 'HK Cards',
+    methods: [
+      'HSBC HK Red Card',
+      'HSBC HK Signature Card',
+      'Mox',
+    ],
+  },
+  {
+    label: 'UK Cards',
+    methods: [
+      'Barclaycard Avios',
+      'Amex',
+      'Chase',
+    ],
+  },
+  {
+    label: 'Other',
+    methods: [
+      'Klarna',
+      'Cash',
+      'Direct Debit',
+      'PayPal',
+    ],
+  },
+]
 
-export const CARD_EMOJI: Record<string, string> = {
-  'HK Card (HSBC HK)': '🏦',
+export const PAYMENT_METHODS: string[] = PAYMENT_METHOD_GROUPS.flatMap(g => g.methods)
+
+export const PAYMENT_METHOD_EMOJI: Record<string, string> = {
+  'HSBC HK Red Card': '🏦',
+  'HSBC HK Signature Card': '🏦',
+  'Mox': '🟣',
   'Barclaycard Avios': '✈️',
   'Amex': '💳',
   'Chase': '🐇',
   'Klarna': '🛍️',
   'Cash': '💵',
+  'Direct Debit': '🏛️',
+  'PayPal': '🅿️',
 }

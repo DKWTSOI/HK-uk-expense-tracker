@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Expense } from '@/lib/types'
-import { CATEGORY_EMOJI, CARD_EMOJI } from '@/lib/constants'
+import { CATEGORY_EMOJI, PAYMENT_METHOD_EMOJI } from '@/lib/constants'
 import MonthPicker from '@/components/MonthPicker'
 import SpendingChart from '@/components/SpendingChart'
 import AnalysisCard from '@/components/AnalysisCard'
@@ -43,16 +43,26 @@ export default function OverviewPage() {
 
   const total = expenses.reduce((s, e) => s + e.amount_gbp, 0)
 
+  // Flatten categories array, split amount_gbp equally
   const byCategory = expenses.reduce<Record<string, number>>((acc, e) => {
-    acc[e.category] = (acc[e.category] || 0) + e.amount_gbp
+    const cats = e.categories ?? []
+    const share = cats.length > 0 ? e.amount_gbp / cats.length : e.amount_gbp
+    cats.forEach(cat => {
+      acc[cat] = (acc[cat] || 0) + share
+    })
     return acc
   }, {})
   const categoryData = Object.entries(byCategory)
     .map(([name, amount]) => ({ name, amount: parseFloat(amount.toFixed(2)) }))
     .sort((a, b) => b.amount - a.amount)
 
-  const byCard = expenses.reduce<Record<string, number>>((acc, e) => {
-    acc[e.card] = (acc[e.card] || 0) + e.amount_gbp
+  // Flatten payment_methods array, split equally
+  const byPayment = expenses.reduce<Record<string, number>>((acc, e) => {
+    const methods = e.payment_methods ?? []
+    const share = methods.length > 0 ? e.amount_gbp / methods.length : e.amount_gbp
+    methods.forEach(m => {
+      acc[m] = (acc[m] || 0) + share
+    })
     return acc
   }, {})
 
@@ -70,7 +80,6 @@ export default function OverviewPage() {
 
   return (
     <div className="min-h-screen pb-16 px-5">
-      {/* Header */}
       <div className="flex items-center justify-between pt-14 pb-2">
         <Link href="/" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
           ← Log
@@ -79,7 +88,6 @@ export default function OverviewPage() {
         <div className="w-10" />
       </div>
 
-      {/* Month selector */}
       <MonthPicker value={month} onChange={setMonth} />
 
       {loading ? (
@@ -119,20 +127,20 @@ export default function OverviewPage() {
             ))}
           </div>
 
-          {/* By card */}
+          {/* By payment method */}
           <div className="py-5 border-b border-gray-100">
-            <p className="text-xs text-gray-300 uppercase tracking-widest mb-4">By Card</p>
-            {Object.entries(byCard)
+            <p className="text-xs text-gray-300 uppercase tracking-widest mb-4">By Payment Method</p>
+            {Object.entries(byPayment)
               .sort((a, b) => b[1] - a[1])
-              .map(([card, amount], i, arr) => (
+              .map(([method, amount], i, arr) => (
                 <div
-                  key={card}
+                  key={method}
                   className={`flex items-center justify-between py-3 ${
                     i < arr.length - 1 ? 'border-b border-gray-50' : ''
                   }`}
                 >
                   <span className="text-sm text-gray-600">
-                    {CARD_EMOJI[card] || '💳'} {card}
+                    {PAYMENT_METHOD_EMOJI[method] || '💳'} {method}
                   </span>
                   <span className="text-sm text-gray-900 font-medium">£{amount.toFixed(2)}</span>
                 </div>
