@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Expense } from '@/lib/types'
+import { CATEGORY_EMOJI, CARD_EMOJI } from '@/lib/constants'
 import MonthPicker from '@/components/MonthPicker'
 import SpendingChart from '@/components/SpendingChart'
 import AnalysisCard from '@/components/AnalysisCard'
@@ -67,87 +68,95 @@ export default function OverviewPage() {
     setAnalysing(false)
   }
 
-  const monthLabel = new Date(`${month}-15`).toLocaleString('en-GB', {
-    month: 'long',
-    year: 'numeric',
-  })
-
   return (
-    <div className="min-h-screen bg-gray-50 pb-16">
+    <div className="min-h-screen pb-16 px-5">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 pt-14 pb-6">
-        <Link href="/" className="text-gray-500 text-sm hover:text-gray-900 transition-colors">
+      <div className="flex items-center justify-between pt-14 pb-2">
+        <Link href="/" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
           ← Log
         </Link>
-        <h1 className="text-xl font-semibold text-gray-900">Overview</h1>
+        <h1 className="text-base font-medium text-gray-900">Overview</h1>
         <div className="w-10" />
       </div>
 
-      <div className="px-4 space-y-4">
-        <MonthPicker value={month} onChange={setMonth} />
+      {/* Month selector */}
+      <MonthPicker value={month} onChange={setMonth} />
 
-        {loading ? (
-          <p className="text-gray-400 text-sm">Loading…</p>
-        ) : expenses.length === 0 ? (
-          <p className="text-gray-400 text-sm">No expenses for {monthLabel}.</p>
-        ) : (
-          <>
-            {/* Total */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
-                Total spent
-              </p>
-              <p className="text-4xl font-light text-gray-900">£{total.toFixed(2)}</p>
-              <p className="text-gray-400 text-sm mt-1">{expenses.length} transactions</p>
-            </div>
+      {loading ? (
+        <p className="text-gray-300 text-sm text-center py-12">Loading…</p>
+      ) : expenses.length === 0 ? (
+        <p className="text-gray-300 text-sm text-center py-12">No expenses this month.</p>
+      ) : (
+        <>
+          {/* Total */}
+          <div className="py-8 border-b border-gray-100">
+            <p className="text-5xl font-thin text-gray-900">£{total.toFixed(2)}</p>
+            <p className="text-xs text-gray-400 mt-2">{expenses.length} transactions</p>
+          </div>
 
-            {/* By category */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">
-                By Category
-              </p>
+          {/* Chart */}
+          {categoryData.length > 1 && (
+            <div className="py-6 border-b border-gray-100">
               <SpendingChart data={categoryData} />
-              <div className="mt-3 space-y-2">
-                {categoryData.map(({ name, amount }) => (
-                  <div key={name} className="flex justify-between text-sm">
-                    <span className="text-gray-500">{name}</span>
-                    <span className="text-gray-900 font-medium">£{amount.toFixed(2)}</span>
-                  </div>
-                ))}
-              </div>
             </div>
+          )}
 
-            {/* By card */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-                By Card
-              </p>
-              <div className="space-y-2">
-                {Object.entries(byCard)
-                  .sort((a, b) => b[1] - a[1])
-                  .map(([card, amount]) => (
-                    <div key={card} className="flex justify-between text-sm">
-                      <span className="text-gray-500">{card}</span>
-                      <span className="text-gray-900 font-medium">£{amount.toFixed(2)}</span>
-                    </div>
-                  ))}
+          {/* By category */}
+          <div className="py-5 border-b border-gray-100">
+            <p className="text-xs text-gray-300 uppercase tracking-widest mb-4">By Category</p>
+            {categoryData.map(({ name, amount }, i) => (
+              <div
+                key={name}
+                className={`flex items-center justify-between py-3 ${
+                  i < categoryData.length - 1 ? 'border-b border-gray-50' : ''
+                }`}
+              >
+                <span className="text-sm text-gray-600">
+                  {CATEGORY_EMOJI[name] || '📦'} {name}
+                </span>
+                <span className="text-sm text-gray-900 font-medium">£{amount.toFixed(2)}</span>
               </div>
-            </div>
+            ))}
+          </div>
 
-            {/* Analyse */}
-            {!analysis && (
+          {/* By card */}
+          <div className="py-5 border-b border-gray-100">
+            <p className="text-xs text-gray-300 uppercase tracking-widest mb-4">By Card</p>
+            {Object.entries(byCard)
+              .sort((a, b) => b[1] - a[1])
+              .map(([card, amount], i, arr) => (
+                <div
+                  key={card}
+                  className={`flex items-center justify-between py-3 ${
+                    i < arr.length - 1 ? 'border-b border-gray-50' : ''
+                  }`}
+                >
+                  <span className="text-sm text-gray-600">
+                    {CARD_EMOJI[card] || '💳'} {card}
+                  </span>
+                  <span className="text-sm text-gray-900 font-medium">£{amount.toFixed(2)}</span>
+                </div>
+              ))}
+          </div>
+
+          {/* Analyse */}
+          {!analysis ? (
+            <div className="py-5">
               <button
                 onClick={analyse}
                 disabled={analysing}
-                className="w-full bg-white border border-gray-200 hover:border-gray-300 text-gray-700 rounded-2xl py-4 font-medium text-base transition-all shadow-sm disabled:opacity-50 hover:shadow"
+                className="w-full border border-gray-200 text-gray-400 rounded-2xl py-4 text-sm transition-all hover:border-gray-300 hover:text-gray-500 disabled:opacity-50"
               >
                 {analysing ? 'Analysing…' : '✦ Analyse this month'}
               </button>
-            )}
-            {analysis && <AnalysisCard text={analysis} />}
-          </>
-        )}
-      </div>
+            </div>
+          ) : (
+            <div className="py-5">
+              <AnalysisCard text={analysis} />
+            </div>
+          )}
+        </>
+      )}
     </div>
   )
 }
