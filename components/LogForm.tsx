@@ -101,7 +101,7 @@ export default function LogForm() {
             placeholder="0"
             value={amount}
             onChange={e => setAmount(e.target.value)}
-            className={`w-full bg-transparent pl-10 text-6xl font-thin placeholder-gray-200 focus:outline-none ${
+            className={`w-full bg-transparent ${currency === 'HKD' ? 'pl-16' : 'pl-10'} text-6xl font-thin placeholder-gray-200 focus:outline-none ${
               type !== 'expense' ? 'text-green-600' : 'text-gray-900'
             }`}
           />
