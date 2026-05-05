@@ -2,7 +2,6 @@
 import { useState, useRef, useEffect } from 'react'
 import CategoryPills from './CategoryPills'
 import PaymentPills from './PaymentPills'
-import { CATEGORIES, PAYMENT_METHODS } from '@/lib/constants'
 
 // In-memory last-used selections (persists within a browser session)
 let lastCategories: string[] = []
