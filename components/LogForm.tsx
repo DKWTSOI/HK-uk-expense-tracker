@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from 'react'
 import CategoryPills from './CategoryPills'
 import PaymentPills from './PaymentPills'
+import RecentExpenses from './RecentExpenses'
 
 // In-memory last-used selections (persists within a browser session)
 let lastCategories: string[] = []
@@ -29,6 +30,7 @@ export default function LogForm() {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
+  const [refreshKey, setRefreshKey] = useState(0)
   const amountRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -63,6 +65,7 @@ export default function LogForm() {
       lastPaymentMethods = paymentMethods
 
       setSuccess(true)
+      setRefreshKey(k => k + 1)
       setTimeout(() => {
         setSuccess(false)
         setAmount('')
@@ -146,6 +149,8 @@ export default function LogForm() {
       </div>
 
       {error && <p className="text-red-400 text-sm mt-4 px-1">{error}</p>}
+
+      <RecentExpenses refreshKey={refreshKey} />
 
       {/* Sticky submit button */}
       <div className="fixed bottom-0 left-0 right-0 px-5 pb-8 pt-4 bg-gradient-to-t from-[#faf9f7] via-[#faf9f7] to-transparent">
