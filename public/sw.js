@@ -1,4 +1,4 @@
-const CACHE_NAME = 'expenses-v1';
+const CACHE_NAME = 'expenses-v2';
 const STATIC_ASSETS = ['/', '/overview'];
 
 self.addEventListener('install', event => {
