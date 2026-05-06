@@ -8,7 +8,7 @@ export async function POST(request: Request) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await request.json()
-  const { amount, currency, categories, payment_methods, type, date } = body
+  const { amount, currency, categories, payment_methods, type, notes, recurring, date } = body
 
   if (!amount || !currency || !date) {
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
@@ -30,6 +30,8 @@ export async function POST(request: Request) {
     categories,
     payment_methods,
     type: expenseType,
+    notes: notes || null,
+    recurring: recurring === true,
     date,
   }).select().single()
 

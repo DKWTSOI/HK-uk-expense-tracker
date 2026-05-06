@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react'
 import CategoryPills from './CategoryPills'
 import PaymentPills from './PaymentPills'
 import RecentExpenses from './RecentExpenses'
-import { ExpenseType } from '@/lib/types'
+import { ExpenseType, Expense } from '@/lib/types'
 
 // In-memory last-used selections (persists within a browser session)
 let lastCategories: string[] = []
@@ -28,6 +28,8 @@ export default function LogForm() {
   const [type, setType] = useState<ExpenseType>('expense')
   const [categories, setCategories] = useState<string[]>(lastCategories)
   const [paymentMethods, setPaymentMethods] = useState<string[]>(lastPaymentMethods)
+  const [notes, setNotes] = useState('')
+  const [recurring, setRecurring] = useState(false)
   const [date, setDate] = useState(today)
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -38,6 +40,17 @@ export default function LogForm() {
   useEffect(() => {
     amountRef.current?.focus()
   }, [])
+
+  function prefill(e: Expense) {
+    setAmount(String(e.amount))
+    setCurrency(e.currency)
+    setType(e.type)
+    setCategories(e.categories)
+    setPaymentMethods(e.payment_methods)
+    setNotes(e.notes || '')
+    setRecurring(false)
+    amountRef.current?.focus()
+  }
 
   const evalResult = evalAmount(amount)
   const isExpression = amount.includes('+') || amount.includes('-') || amount.includes('*')
@@ -58,6 +71,8 @@ export default function LogForm() {
         type,
         categories,
         payment_methods: paymentMethods,
+        notes,
+        recurring,
         date,
       }),
     })
@@ -72,6 +87,8 @@ export default function LogForm() {
       setTimeout(() => {
         setSuccess(false)
         setAmount('')
+        setNotes('')
+        setRecurring(false)
         setCategories(lastCategories)
         setPaymentMethods(lastPaymentMethods)
         amountRef.current?.focus()
@@ -186,9 +203,32 @@ export default function LogForm() {
         />
       </div>
 
+      {/* Notes */}
+      <div className="py-5 border-b border-gray-100">
+        <input
+          type="text"
+          placeholder="Notes (optional)"
+          value={notes}
+          onChange={e => setNotes(e.target.value)}
+          className="w-full bg-transparent text-sm text-gray-600 placeholder-gray-300 focus:outline-none"
+        />
+      </div>
+
+      {/* Recurring */}
+      <div className="py-5 border-b border-gray-100 flex items-center justify-between">
+        <p className="text-xs text-gray-300 uppercase tracking-widest">Save as recurring</p>
+        <button
+          type="button"
+          onClick={() => setRecurring(r => !r)}
+          className={`w-10 h-6 rounded-full transition-colors ${recurring ? 'bg-stone-800' : 'bg-gray-200'}`}
+        >
+          <span className={`block w-4 h-4 bg-white rounded-full shadow transition-transform mx-1 ${recurring ? 'translate-x-4' : ''}`} />
+        </button>
+      </div>
+
       {error && <p className="text-red-400 text-sm mt-4 px-1">{error}</p>}
 
-      <RecentExpenses refreshKey={refreshKey} />
+      <RecentExpenses refreshKey={refreshKey} onPrefill={prefill} />
 
       {/* Sticky submit button */}
       <div className="fixed bottom-0 left-0 right-0 px-5 pb-8 pt-4 bg-gradient-to-t from-[#faf9f7] via-[#faf9f7] to-transparent">

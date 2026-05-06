@@ -8,6 +8,8 @@ export interface Expense {
   categories: string[]
   payment_methods: string[]
   type: ExpenseType
+  notes: string | null
+  recurring: boolean
   date: string
   created_at: string
 }
