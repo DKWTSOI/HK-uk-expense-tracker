@@ -114,7 +114,7 @@ export default function LogForm() {
           <input
             ref={amountRef}
             type="text"
-            inputMode="decimal"
+            inputMode="text"
             placeholder="0"
             value={amount}
             onChange={e => setAmount(e.target.value)}
@@ -137,21 +137,6 @@ export default function LogForm() {
                 {c}
               </button>
             </span>
-          ))}
-          <span className="text-gray-200 text-xs select-none">·</span>
-          {['+', '−', '×'].map(op => (
-            <button
-              key={op}
-              type="button"
-              onClick={() => {
-                const sym = op === '−' ? '-' : op === '×' ? '*' : '+'
-                setAmount(a => a + sym)
-                amountRef.current?.focus()
-              }}
-              className="text-gray-300 hover:text-gray-600 text-sm font-medium transition-colors px-0.5"
-            >
-              {op}
-            </button>
           ))}
           {isExpression && evalResult && (
             <span className="text-gray-500 text-xs ml-1">= {currency === 'GBP' ? '£' : 'HK$'}{evalResult.toFixed(2)}</span>
