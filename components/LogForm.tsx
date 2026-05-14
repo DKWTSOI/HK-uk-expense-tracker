@@ -3,9 +3,12 @@ import { useState, useRef, useEffect } from 'react'
 import CategoryPills from './CategoryPills'
 import PaymentPills from './PaymentPills'
 import RecentExpenses from './RecentExpenses'
+import Card from './ui/Card'
+import Label from './ui/Label'
+import Pill from './ui/Pill'
 import { ExpenseType, Expense } from '@/lib/types'
+import { HKD_TO_GBP } from '@/lib/constants'
 
-// In-memory last-used selections (persists within a browser session)
 let lastCategories: string[] = []
 let lastPaymentMethods: string[] = []
 
@@ -19,6 +22,13 @@ function evalAmount(expr: string): number | null {
   } catch {
     return null
   }
+}
+
+function formatDate(iso: string) {
+  const d = new Date(iso + 'T00:00:00')
+  const today = new Date(); today.setHours(0,0,0,0)
+  if (d.getTime() === today.getTime()) return 'Today'
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 }
 
 export default function LogForm() {
@@ -35,11 +45,43 @@ export default function LogForm() {
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
   const [refreshKey, setRefreshKey] = useState(0)
+  // AI quick-add
+  const [aiText, setAiText] = useState('')
+  const [aiParsing, setAiParsing] = useState(false)
+  const [aiResult, setAiResult] = useState<{amount?: number; currency?: 'GBP'|'HKD'; categories?: string[]; payment_methods?: string[]; notes?: string} | null>(null)
   const amountRef = useRef<HTMLInputElement>(null)
 
+  useEffect(() => { amountRef.current?.focus() }, [])
+
+  // Debounce AI parse
   useEffect(() => {
-    amountRef.current?.focus()
-  }, [])
+    if (!aiText.trim()) { setAiResult(null); return }
+    const t = setTimeout(async () => {
+      setAiParsing(true)
+      try {
+        const res = await fetch('/api/parse', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: aiText }),
+        })
+        if (res.ok) setAiResult(await res.json())
+      } finally {
+        setAiParsing(false)
+      }
+    }, 400)
+    return () => clearTimeout(t)
+  }, [aiText])
+
+  function applyAiResult() {
+    if (!aiResult) return
+    if (aiResult.amount) setAmount(String(aiResult.amount))
+    if (aiResult.currency) setCurrency(aiResult.currency)
+    if (aiResult.categories?.length) setCategories(aiResult.categories)
+    if (aiResult.payment_methods?.length) setPaymentMethods(aiResult.payment_methods)
+    if (aiResult.notes) setNotes(aiResult.notes)
+    setAiText('')
+    setAiResult(null)
+  }
 
   function prefill(e: Expense) {
     setAmount(String(e.amount))
@@ -53,44 +95,36 @@ export default function LogForm() {
   }
 
   const evalResult = evalAmount(amount)
-  const isExpression = amount.includes('+') || amount.includes('-') || amount.includes('*')
+  const isExpression = /[+\-*]/.test(amount)
   const isValid = evalResult !== null && categories.length > 0 && paymentMethods.length > 0
+
+  const gbpPreview = (() => {
+    if (!evalResult) return ''
+    if (currency === 'HKD') return `≈ £${(evalResult * HKD_TO_GBP).toFixed(2)}`
+    return `≈ HK$${(evalResult / HKD_TO_GBP).toFixed(0)}`
+  })()
+
+  const displaySign = currency === 'GBP' ? '£' : 'HK$'
+  const _displayValue = evalResult
+    ? (isExpression ? evalResult.toFixed(2) : (amount || '0'))
+    : (amount || '0')
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!isValid || evalResult === null) return
-    setLoading(true)
-    setError('')
-
+    setLoading(true); setError('')
     const res = await fetch('/api/expenses', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        amount: evalResult,
-        currency,
-        type,
-        categories,
-        payment_methods: paymentMethods,
-        notes,
-        recurring,
-        date,
-      }),
+      body: JSON.stringify({ amount: evalResult, currency, type, categories, payment_methods: paymentMethods, notes, recurring, date }),
     })
-
     setLoading(false)
     if (res.ok) {
-      lastCategories = categories
-      lastPaymentMethods = paymentMethods
-
-      setSuccess(true)
-      setRefreshKey(k => k + 1)
+      lastCategories = categories; lastPaymentMethods = paymentMethods
+      setSuccess(true); setRefreshKey(k => k + 1)
       setTimeout(() => {
-        setSuccess(false)
-        setAmount('')
-        setNotes('')
-        setRecurring(false)
-        setCategories(lastCategories)
-        setPaymentMethods(lastPaymentMethods)
+        setSuccess(false); setAmount(''); setNotes(''); setRecurring(false)
+        setCategories(lastCategories); setPaymentMethods(lastPaymentMethods)
         amountRef.current?.focus()
       }, 1500)
     } else {
@@ -99,132 +133,137 @@ export default function LogForm() {
     }
   }
 
-  const gbpPreview = currency === 'HKD' && evalResult
-    ? `≈ £${(evalResult * 0.1).toFixed(2)}`
-    : null
-
   return (
-    <form onSubmit={handleSubmit} className="pb-28">
-      {/* Amount */}
-      <div className="py-5 border-b border-gray-100">
-        <div className="relative">
-          <span className="absolute left-0 top-1/2 -translate-y-1/2 text-5xl font-thin text-gray-200 pointer-events-none select-none">
-            {currency === 'GBP' ? '£' : 'HK$'}
-          </span>
-          <input
-            ref={amountRef}
-            type="text"
-            inputMode="text"
-            placeholder="0"
-            value={amount}
-            onChange={e => setAmount(e.target.value)}
-            className={`w-full bg-transparent ${currency === 'HKD' ? 'pl-16' : 'pl-10'} text-6xl font-thin placeholder-gray-200 focus:outline-none ${
-              type !== 'expense' ? 'text-green-600' : 'text-gray-900'
-            }`}
-          />
-        </div>
-        <div className="flex items-center gap-3 mt-3 pl-1">
-          {(['GBP', 'HKD'] as const).map((c, i) => (
-            <span key={c} className="flex items-center gap-3">
-              {i > 0 && <span className="text-gray-200 text-xs select-none">·</span>}
-              <button
-                type="button"
-                onClick={() => setCurrency(c)}
-                className={`text-sm font-medium transition-colors ${
-                  currency === c ? 'text-stone-800' : 'text-gray-300'
-                }`}
-              >
-                {c}
-              </button>
-            </span>
-          ))}
-          {isExpression && evalResult && (
-            <span className="text-gray-500 text-xs ml-1">= {currency === 'GBP' ? '£' : 'HK$'}{evalResult.toFixed(2)}</span>
-          )}
+    <form onSubmit={handleSubmit}>
+      {/* Hero amount */}
+      <div className="px-[22px] pt-[14px] pb-[22px]">
+        <Label>Amount</Label>
+        <div className="flex items-baseline gap-3 mt-2.5">
+          <div className="flex items-baseline">
+            <span className="font-display font-light opacity-50 mr-1" style={{ fontSize: 37 }}>{displaySign}</span>
+            <input
+              ref={amountRef}
+              type="text"
+              inputMode="decimal"
+              placeholder="0"
+              value={amount}
+              onChange={e => setAmount(e.target.value)}
+              className="bg-transparent font-display placeholder-ink-30 focus:outline-none text-ink"
+              style={{ fontSize: 68, lineHeight: 1, width: `${Math.max(1, amount.length || 1)}ch` }}
+            />
+          </div>
           {gbpPreview && (
-            <span className="text-gray-400 text-xs ml-1">{gbpPreview}</span>
+            <span className="text-[13px] text-ink-40 tabular-nums">{gbpPreview}</span>
           )}
+        </div>
+        {/* Currency + type pills */}
+        <div className="flex items-center gap-2 mt-[14px]">
+          <Pill on={currency === 'GBP'} tone="accent" size="sm" onClick={() => setCurrency('GBP')}>£ GBP</Pill>
+          <Pill on={currency === 'HKD'} tone="accent" size="sm" onClick={() => setCurrency('HKD')}>HK$ HKD</Pill>
+          <span className="flex-1" />
+          <Pill on={type === 'expense'} size="sm" onClick={() => setType('expense')}>Expense</Pill>
+          <Pill on={type === 'refund' || type === 'cashback'} size="sm" onClick={() => setType(type === 'refund' ? 'cashback' : 'refund')}>Refund</Pill>
         </div>
       </div>
 
-      {/* Type */}
-      <div className="py-5 border-b border-gray-100">
-        <div className="flex gap-4">
-          {([['expense', 'Expense'], ['refund', 'Refund'], ['cashback', 'Cashback']] as const).map(([val, label]) => (
-            <button
-              key={val}
-              type="button"
-              onClick={() => setType(val)}
-              className={`text-sm font-medium transition-colors ${
-                type === val ? 'text-stone-800' : 'text-gray-300'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+      {/* AI quick-add */}
+      <div className="px-[22px] pb-[18px]">
+        <Card pad="p-[14px]" className={aiResult ? 'bg-cream-2' : ''}>
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-full bg-accent text-white grid place-items-center text-sm font-semibold shadow-sm flex-shrink-0">
+              ✦
+            </div>
+            <input
+              type="text"
+              placeholder={'Type or speak — "11.50 oat latte hsbc"'}
+              value={aiText}
+              onChange={e => setAiText(e.target.value)}
+              className="flex-1 bg-transparent border-none outline-none text-[14px] text-ink placeholder-ink-40"
+            />
+            <span className="text-ink-40 text-base">{aiParsing ? '…' : '🎙'}</span>
+          </div>
+          {aiResult && (
+            <div className="mt-3 pt-3 border-t border-dashed border-cream-3">
+              <p className="text-[11px] text-ink-40 mb-2">Detected — tap to confirm</p>
+              <div className="flex flex-wrap gap-1.5">
+                {aiResult.amount && (
+                  <Pill on size="sm" tone="accent" onClick={applyAiResult}>
+                    {aiResult.currency === 'HKD' ? 'HK$' : '£'}{aiResult.amount}
+                  </Pill>
+                )}
+                {aiResult.categories?.map(c => (
+                  <Pill key={c} on size="sm" onClick={applyAiResult}>{c}</Pill>
+                ))}
+                {aiResult.payment_methods?.map(p => (
+                  <Pill key={p} on size="sm" onClick={applyAiResult}>{p}</Pill>
+                ))}
+              </div>
+            </div>
+          )}
+        </Card>
       </div>
 
       {/* Category */}
-      <div className="py-5 border-b border-gray-100">
-        <p className="text-xs text-gray-300 uppercase tracking-widest mb-3">Category</p>
+      <div className="px-[22px] pb-[18px]">
+        <Label className="mb-2.5">Category</Label>
         <CategoryPills value={categories} onChange={setCategories} />
       </div>
 
-      {/* Payment Method */}
-      <div className="py-5 border-b border-gray-100">
-        <p className="text-xs text-gray-300 uppercase tracking-widest mb-3">Payment Method</p>
+      {/* Payment */}
+      <div className="px-[22px] pb-[18px]">
+        <Label className="mb-2.5">Payment</Label>
         <PaymentPills value={paymentMethods} onChange={setPaymentMethods} />
       </div>
 
-      {/* Date */}
-      <div className="py-5 border-b border-gray-100 flex items-center justify-between">
-        <p className="text-xs text-gray-300 uppercase tracking-widest">Date</p>
-        <input
-          type="date"
-          value={date}
-          onChange={e => setDate(e.target.value)}
-          className="bg-transparent text-gray-600 text-sm text-right focus:outline-none"
-        />
+      {/* Settings card */}
+      <div className="px-[22px] pb-[18px]">
+        <Card pad="p-1" className="overflow-hidden">
+          {/* Date row */}
+          <label className="flex items-center justify-between px-[14px] py-[14px] border-b border-cream-2 cursor-pointer">
+            <span className="text-[13px] text-ink-50">Date</span>
+            <span className="text-[13.5px] text-ink font-medium">
+              {formatDate(date)} · {new Date(date + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+              <input type="date" value={date} onChange={e => setDate(e.target.value)} className="sr-only" />
+            </span>
+          </label>
+          {/* Notes row */}
+          <div className="flex items-center justify-between px-[14px] py-[14px] border-b border-cream-2">
+            <span className="text-[13px] text-ink-50">Notes</span>
+            <input
+              type="text"
+              placeholder="Add a note"
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              className="bg-transparent text-[13.5px] text-ink text-right focus:outline-none placeholder-ink-30 max-w-[200px]"
+            />
+          </div>
+          {/* Recurring row */}
+          <div className="flex items-center justify-between px-[14px] py-[14px] border-b border-cream-2">
+            <span className="text-[13px] text-ink-50">Save as recurring</span>
+            <button
+              type="button"
+              onClick={() => setRecurring(r => !r)}
+              className={`w-[38px] h-[22px] rounded-full transition-colors relative ${recurring ? 'bg-accent' : 'bg-cream-2'}`}
+            >
+              <span className={`absolute top-[2px] w-[18px] h-[18px] rounded-full bg-white shadow-sm transition-transform ${recurring ? 'left-[18px]' : 'left-[2px]'}`} />
+            </button>
+          </div>
+        </Card>
       </div>
 
-      {/* Notes */}
-      <div className="py-5 border-b border-gray-100">
-        <input
-          type="text"
-          placeholder="Notes (optional)"
-          value={notes}
-          onChange={e => setNotes(e.target.value)}
-          className="w-full bg-transparent text-sm text-gray-600 placeholder-gray-300 focus:outline-none"
-        />
-      </div>
-
-      {/* Recurring */}
-      <div className="py-5 border-b border-gray-100 flex items-center justify-between">
-        <p className="text-xs text-gray-300 uppercase tracking-widest">Save as recurring</p>
-        <button
-          type="button"
-          onClick={() => setRecurring(r => !r)}
-          className={`w-10 h-6 rounded-full transition-colors ${recurring ? 'bg-stone-800' : 'bg-gray-200'}`}
-        >
-          <span className={`block w-4 h-4 bg-white rounded-full shadow transition-transform mx-1 ${recurring ? 'translate-x-4' : ''}`} />
-        </button>
-      </div>
-
-      {error && <p className="text-red-400 text-sm mt-4 px-1">{error}</p>}
+      {error && <p className="text-rose text-sm px-[22px] mb-4">{error}</p>}
 
       <RecentExpenses refreshKey={refreshKey} onPrefill={prefill} />
 
-      {/* Sticky submit button */}
-      <div className="fixed bottom-0 left-0 right-0 px-5 pb-8 pt-4 bg-gradient-to-t from-[#faf9f7] via-[#faf9f7] to-transparent">
+      {/* Sticky CTA */}
+      <div className="fixed bottom-[78px] left-0 right-0 max-w-[440px] mx-auto px-[22px] pt-[14px] pb-3"
+           style={{ background: 'linear-gradient(to top, #faf6ef 60%, rgba(250,246,239,0))' }}>
         <button
           type="submit"
           disabled={loading || !isValid}
-          className={`w-full rounded-2xl py-4 text-base font-medium transition-all ${
-            success
-              ? 'bg-green-500 text-white scale-[0.98]'
-              : 'bg-stone-900 text-white disabled:opacity-25 hover:bg-stone-800 active:scale-[0.98]'
-          }`}
+          className={`w-full rounded-squircle py-[17px] text-base font-semibold tracking-[-0.01em] transition-all
+            ${success ? 'bg-sage text-white' : 'bg-ink text-paper disabled:opacity-25'}`}
+          style={{ boxShadow: isValid ? '0 8px 22px -10px rgba(60,40,20,0.45)' : undefined }}
         >
           {success ? '✓ Logged' : loading ? 'Logging…' : 'Log it'}
         </button>
