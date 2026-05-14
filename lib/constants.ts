@@ -11,6 +11,7 @@ export const CATEGORIES = [
   'Subscriptions',
   'Investment / ISA',
   'Travel',
+  'Amazon',
   'Other',
 ] as const
 
@@ -25,7 +26,8 @@ export const CATEGORY_EMOJI: Record<string, string> = {
   'Subscriptions': '🔔',
   'Investment / ISA': '📈',
   'Travel': '✈️',
-  'Other': '📦',
+  'Amazon': '📦',
+  'Other': '🗂️',
 }
 
 export const PAYMENT_METHOD_GROUPS: { label: string; methods: string[] }[] = [
@@ -34,7 +36,6 @@ export const PAYMENT_METHOD_GROUPS: { label: string; methods: string[] }[] = [
     methods: [
       'HSBC HK Red Card',
       'HSBC HK Signature Card',
-      'Mox',
     ],
   },
   {
@@ -61,9 +62,8 @@ export const PAYMENT_METHODS: string[] = PAYMENT_METHOD_GROUPS.flatMap(g => g.me
 export const PAYMENT_METHOD_EMOJI: Record<string, string> = {
   'HSBC HK Red Card': '🔴',
   'HSBC HK Signature Card': '⚫',
-  'Mox': '🟣',
   'Barclaycard Avios': '💳',
-  'Amex': '💚',
+  'Amex': '🇺🇸',
   'Chase': '🔵',
   'Klarna': '🩷',
   'Cash': '💷',
