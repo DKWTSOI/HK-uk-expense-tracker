@@ -49,9 +49,20 @@ export default function LogForm() {
   const [aiText, setAiText] = useState('')
   const [aiParsing, setAiParsing] = useState(false)
   const [aiResult, setAiResult] = useState<{amount?: number; currency?: 'GBP'|'HKD'; categories?: string[]; payment_methods?: string[]; notes?: string} | null>(null)
+  const [padVisible, setPadVisible] = useState(true)
   const amountRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => { amountRef.current?.focus() }, [])
+
+  function padPress(key: string) {
+    if (key === '⌫') {
+      setAmount(a => a.slice(0, -1))
+    } else if (key === 'C') {
+      setAmount('')
+    } else {
+      setAmount(a => a + key)
+    }
+  }
 
   // Debounce AI parse
   useEffect(() => {
@@ -144,11 +155,12 @@ export default function LogForm() {
             <input
               ref={amountRef}
               type="text"
-              inputMode="decimal"
+              inputMode="none"
+              readOnly
               placeholder="0"
               value={amount}
-              onChange={e => setAmount(e.target.value)}
-              className="bg-transparent font-display placeholder-ink-30 focus:outline-none text-ink"
+              onFocus={() => setPadVisible(true)}
+              className="bg-transparent font-display placeholder-ink-30 focus:outline-none text-ink caret-accent"
               style={{ fontSize: 68, lineHeight: 1, width: `${Math.max(1, amount.length || 1)}ch` }}
             />
           </div>
@@ -165,6 +177,45 @@ export default function LogForm() {
           <Pill on={type === 'refund' || type === 'cashback'} size="sm" onClick={() => setType(type === 'refund' ? 'cashback' : 'refund')}>Refund</Pill>
         </div>
       </div>
+
+      {/* Calculator pad */}
+      {padVisible && (
+        <div className="px-[22px] pb-4">
+          {(() => {
+            const keys = [
+              '7', '8', '9', '⌫',
+              '4', '5', '6', '+',
+              '1', '2', '3', '-',
+              'C', '0', '.', '',
+            ]
+            return (
+              <div className="grid grid-cols-4 gap-2">
+                {keys.map((k, i) => {
+                  if (k === '') return <div key={i} />
+                  const isOp = k === '+' || k === '-'
+                  const isDel = k === '⌫' || k === 'C'
+                  return (
+                    <button
+                      key={k + i}
+                      type="button"
+                      onClick={() => padPress(k)}
+                      className={`h-12 rounded-[14px] text-[18px] font-medium transition-colors active:scale-95
+                        ${isOp ? 'bg-accent/10 text-accent font-semibold' : ''}
+                        ${isDel ? 'bg-cream-2 text-ink-50 text-[16px]' : ''}
+                        ${!isOp && !isDel ? 'bg-paper text-ink card-shadow' : ''}`}
+                    >
+                      {k}
+                    </button>
+                  )
+                })}
+              </div>
+            )
+          })()}
+          {evalResult && /[+\-]/.test(amount) && (
+            <p className="text-center text-[13px] text-ink-40 tabular-nums mt-2">= {displaySign}{evalResult.toFixed(2)}</p>
+          )}
+        </div>
+      )}
 
       {/* AI quick-add */}
       <div className="px-[22px] pb-[18px]">
