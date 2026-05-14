@@ -44,31 +44,31 @@ export default function RecentExpenses({ refreshKey, onPrefill }: Props) {
       <div
         key={e.id}
         className={`flex items-center justify-between py-3 ${
-          i < arr.length - 1 ? 'border-b border-gray-50' : ''
+          i < arr.length - 1 ? 'border-b border-cream-2' : ''
         }`}
       >
         <div className="flex-1 min-w-0">
-          <p className="text-sm text-gray-600 truncate">
+          <p className="text-[13.5px] text-ink truncate">
             {e.categories.map(c => CATEGORY_EMOJI[c] || '📦').join(' ')} {e.categories.join(', ')}
           </p>
-          {e.notes && <p className="text-xs text-gray-400 mt-0.5 truncate">{e.notes}</p>}
-          <p className="text-xs text-gray-300 mt-0.5">
+          {e.notes && <p className="text-[11px] text-ink-40 mt-0.5 truncate">{e.notes}</p>}
+          <p className="text-[11px] text-ink-30 mt-0.5">
             {e.date}{e.type !== 'expense' && <span className="ml-1.5 capitalize">{e.type}</span>}
           </p>
         </div>
         <div className="flex items-center gap-3 ml-3 shrink-0">
           <div className="text-right">
-            <p className={`text-sm font-medium ${isCredit ? 'text-green-600' : 'text-gray-900'}`}>
+            <p className={`text-[13.5px] font-medium tabular-nums ${isCredit ? 'text-sage' : 'text-ink'}`}>
               {isCredit ? '+' : ''}£{e.amount_gbp.toFixed(2)}
             </p>
             {e.currency === 'HKD' && (
-              <p className="text-xs text-gray-300">HK${e.amount.toFixed(0)}</p>
+              <p className="text-[11px] text-ink-30">HK${e.amount.toFixed(0)}</p>
             )}
           </div>
           {showRelog && (
             <button
               onClick={() => onPrefill(e)}
-              className="text-gray-300 hover:text-stone-700 transition-colors text-sm"
+              className="text-ink-30 hover:text-ink transition-colors text-sm"
               title="Re-log"
             >
               ↺
@@ -76,7 +76,7 @@ export default function RecentExpenses({ refreshKey, onPrefill }: Props) {
           )}
           <button
             onClick={() => deleteExpense(e.id)}
-            className="text-gray-200 hover:text-red-400 transition-colors text-lg leading-none"
+            className="text-ink-30 hover:text-rose transition-colors text-lg leading-none"
           >
             ×
           </button>
@@ -86,16 +86,16 @@ export default function RecentExpenses({ refreshKey, onPrefill }: Props) {
   }
 
   return (
-    <div className="mt-2">
+    <div className="mt-2 px-[22px]">
       {recurring.length > 0 && (
-        <div className="border-t border-gray-100 pt-5">
-          <p className="text-xs text-gray-300 uppercase tracking-widest mb-3">Recurring</p>
+        <div className="border-t border-cream-2 pt-5">
+          <p className="text-[10.5px] text-ink-40 uppercase tracking-[0.14em] font-semibold mb-3">Recurring</p>
           {recurring.map((e, i) => renderRow(e, i, recurring, true))}
         </div>
       )}
       {recent.length > 0 && (
-        <div className="border-t border-gray-100 pt-5">
-          <p className="text-xs text-gray-300 uppercase tracking-widest mb-3">Recent</p>
+        <div className="border-t border-cream-2 pt-5">
+          <p className="text-[10.5px] text-ink-40 uppercase tracking-[0.14em] font-semibold mb-3">Recent</p>
           {recent.map((e, i) => renderRow(e, i, recent))}
         </div>
       )}
