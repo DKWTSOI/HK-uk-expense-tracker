@@ -56,6 +56,7 @@ export default function LogForm() {
   // Debounce AI parse
   useEffect(() => {
     if (!aiText.trim()) { setAiResult(null); return }
+    const controller = new AbortController()
     const t = setTimeout(async () => {
       setAiParsing(true)
       try {
@@ -63,18 +64,21 @@ export default function LogForm() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ text: aiText }),
+          signal: controller.signal,
         })
         if (res.ok) setAiResult(await res.json())
+      } catch (err) {
+        if ((err as Error).name !== 'AbortError') console.error('parse error', err)
       } finally {
         setAiParsing(false)
       }
     }, 400)
-    return () => clearTimeout(t)
+    return () => { clearTimeout(t); controller.abort() }
   }, [aiText])
 
   function applyAiResult() {
     if (!aiResult) return
-    if (aiResult.amount) setAmount(String(aiResult.amount))
+    if (aiResult.amount != null) setAmount(String(aiResult.amount))
     if (aiResult.currency) setCurrency(aiResult.currency)
     if (aiResult.categories?.length) setCategories(aiResult.categories)
     if (aiResult.payment_methods?.length) setPaymentMethods(aiResult.payment_methods)
@@ -105,9 +109,6 @@ export default function LogForm() {
   })()
 
   const displaySign = currency === 'GBP' ? '£' : 'HK$'
-  const _displayValue = evalResult
-    ? (isExpression ? evalResult.toFixed(2) : (amount || '0'))
-    : (amount || '0')
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -222,7 +223,7 @@ export default function LogForm() {
           <label className="flex items-center justify-between px-[14px] py-[14px] border-b border-cream-2 cursor-pointer">
             <span className="text-[13px] text-ink-50">Date</span>
             <span className="text-[13.5px] text-ink font-medium">
-              {formatDate(date)} · {new Date(date + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+              {formatDate(date)}
               <input type="date" value={date} onChange={e => setDate(e.target.value)} className="sr-only" />
             </span>
           </label>
