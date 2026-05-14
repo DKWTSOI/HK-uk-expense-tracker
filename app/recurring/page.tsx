@@ -10,7 +10,7 @@ import { CATEGORY_EMOJI, PAYMENT_METHOD_EMOJI, HKD_TO_GBP } from '@/lib/constant
 function currentMonth() { return new Date().toISOString().slice(0, 7) }
 
 function getUpcoming(recurring: ReturnType<typeof useExpenses>['expenses']) {
-  return recurring.slice(0, 5)
+  return recurring.slice().sort((a, b) => a.date.localeCompare(b.date)).slice(0, 5)
 }
 
 export default function RecurringPage() {

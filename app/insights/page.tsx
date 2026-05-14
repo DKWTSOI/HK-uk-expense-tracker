@@ -1,6 +1,8 @@
 'use client'
 export const dynamic = 'force-dynamic'
+import React from 'react'
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import TabBar from '@/components/ui/TabBar'
 import Card from '@/components/ui/Card'
 import Label from '@/components/ui/Label'
@@ -20,6 +22,15 @@ interface InsightsData {
   suggestion: { body: string; action: { label: string } } | null
 }
 
+function parseEmphasis(text: string): React.ReactNode[] {
+  const parts = text.split(/(<em>.*?<\/em>)/g)
+  return parts.map((part, i) => {
+    const match = part.match(/^<em>(.*?)<\/em>$/)
+    if (match) return <em key={i}>{match[1]}</em>
+    return part
+  })
+}
+
 const DOT_COLOR: Record<string, string> = {
   warn: '#b25467',
   info: '#7c715f',
@@ -32,6 +43,7 @@ const CHIP_COLOR: Record<string, { bg: string; fg: string }> = {
 }
 
 export default function InsightsPage() {
+  const router = useRouter()
   const [month] = useState(currentMonth())
   const [data, setData] = useState<InsightsData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -76,10 +88,9 @@ export default function InsightsPage() {
                 <span className="text-sm">✦</span>
                 <span className="text-[11px] tracking-[0.16em] uppercase font-semibold">This month, in a sentence</span>
               </div>
-              <p
-                className="font-display text-[22px] leading-[1.3] tracking-[-0.015em] m-0"
-                dangerouslySetInnerHTML={{ __html: data.summary }}
-              />
+              <p className="font-display text-[22px] leading-[1.3] tracking-[-0.015em] m-0">
+                {parseEmphasis(data.summary)}
+              </p>
             </div>
           </div>
 
@@ -123,7 +134,10 @@ export default function InsightsPage() {
                 </div>
                 <p className="text-[14px] leading-[1.55] text-ink m-0">{data.suggestion.body}</p>
                 <div className="flex gap-2 mt-[14px]">
-                  <button className="flex-1 py-[11px] rounded-[14px] border-none bg-ink text-paper text-[13px] font-semibold">
+                  <button
+                    onClick={() => router.push('/budgets')}
+                    className="flex-1 py-[11px] rounded-[14px] border-none bg-ink text-paper text-[13px] font-semibold"
+                  >
                     {data.suggestion.action.label}
                   </button>
                   <button className="px-4 py-[11px] rounded-[14px] border-none bg-transparent text-ink-50 text-[13px] font-medium">
