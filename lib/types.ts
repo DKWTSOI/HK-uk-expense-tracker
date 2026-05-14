@@ -13,3 +13,12 @@ export interface Expense {
   date: string
   created_at: string
 }
+
+export interface Budget {
+  id: string
+  user_id: string
+  category: string
+  cap_gbp: number
+  period: 'monthly' | 'weekly'
+  created_at: string
+}
