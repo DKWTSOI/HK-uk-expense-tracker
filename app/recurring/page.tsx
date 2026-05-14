@@ -58,7 +58,7 @@ export default function RecurringPage() {
                   <span className="text-[11px] text-ink-40">this month</span>
                 </div>
                 <div className="flex flex-col gap-2.5">
-                  {upcoming.map((e, i) => {
+                  {upcoming.map((e) => {
                     const d = new Date(e.date + 'T00:00:00')
                     const dayName = d.toLocaleDateString('en-GB', { weekday: 'short' })
                     const dayNum = d.getDate()

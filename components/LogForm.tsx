@@ -99,7 +99,6 @@ export default function LogForm() {
   }
 
   const evalResult = evalAmount(amount)
-  const isExpression = /[+\-*]/.test(amount)
   const isValid = evalResult !== null && categories.length > 0 && paymentMethods.length > 0
 
   const gbpPreview = (() => {
