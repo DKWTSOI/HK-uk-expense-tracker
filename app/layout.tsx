@@ -1,12 +1,17 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter } from 'next/font/google'
+import { Inter, Fraunces } from 'next/font/google'
 import './globals.css'
 import SwRegister from './sw-register'
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
+const fraunces = Fraunces({
+  subsets: ['latin'],
+  variable: '--font-display',
+  axes: ['SOFT', 'WONK'],
+})
 
 export const viewport: Viewport = {
-  themeColor: '#faf9f7',
+  themeColor: '#faf6ef',
 }
 
 export const metadata: Metadata = {
@@ -26,9 +31,11 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${inter.className} text-gray-900 min-h-screen`} style={{ backgroundColor: '#faf9f7' }}>
+      <body className={`${inter.variable} ${fraunces.variable} font-sans text-ink bg-paper-bg min-h-screen`}>
         <SwRegister />
-        {children}
+        <div className="mx-auto max-w-[440px] min-h-screen relative">
+          {children}
+        </div>
       </body>
     </html>
   )
