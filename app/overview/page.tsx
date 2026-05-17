@@ -25,6 +25,29 @@ function nextMonth(m: string) {
   return d.toISOString().slice(0, 7)
 }
 
+function exportCSV(expenses: ReturnType<typeof useExpenses>['expenses'], month: string) {
+  const header = 'Date,Amount,Currency,Amount GBP,Type,Categories,Payment Methods,Notes,Recurring'
+  const rows = expenses.map(e => [
+    e.date,
+    e.amount,
+    e.currency,
+    e.amount_gbp,
+    e.type,
+    (e.categories ?? []).join(';'),
+    (e.payment_methods ?? []).join(';'),
+    (e.notes || '').replace(/,/g, ' '),
+    e.recurring ? 'yes' : 'no',
+  ].join(','))
+  const csv = [header, ...rows].join('\n')
+  const blob = new Blob([csv], { type: 'text/csv' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `expenses-${month}.csv`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 export default function OverviewPage() {
   const [month, setMonth] = useState(currentMonth())
   const { expenses, loading } = useExpenses(month)
@@ -61,10 +84,23 @@ export default function OverviewPage() {
           ‹ {new Date(`${prevMonth(month)}-15`).toLocaleString('en-GB', { month: 'short' })}
         </button>
         <h1 className="text-[15px] font-semibold text-ink tracking-[-0.01em]">{monthLabel(month)}</h1>
-        <button onClick={() => setMonth(nextMonth(month))} className="min-w-14 text-sm text-ink-50 font-medium text-right">
-          {new Date(`${nextMonth(month)}-15`).toLocaleString('en-GB', { month: 'short' })} ›
-        </button>
+        <div className="min-w-14 flex justify-end">
+          <button onClick={() => setMonth(nextMonth(month))} className="text-sm text-ink-50 font-medium">
+            {new Date(`${nextMonth(month)}-15`).toLocaleString('en-GB', { month: 'short' })} ›
+          </button>
+        </div>
       </div>
+      {/* Export row */}
+      {!loading && expenses.length > 0 && (
+        <div className="flex justify-end px-[22px] pb-1">
+          <button
+            onClick={() => exportCSV(expenses, month)}
+            className="text-[11px] text-ink-40 hover:text-accent transition-colors flex items-center gap-1"
+          >
+            ↓ Export CSV
+          </button>
+        </div>
+      )}
 
       {loading ? (
         <p className="text-ink-30 text-sm text-center py-12">Loading…</p>

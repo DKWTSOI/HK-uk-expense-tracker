@@ -6,7 +6,6 @@ const TABS = [
   { id: 'log',      href: '/',           label: 'Log',      icon: '＋' },
   { id: 'overview', href: '/overview',   label: 'Overview', icon: '◐' },
   { id: 'budgets',  href: '/budgets',    label: 'Budgets',  icon: '◳' },
-  { id: 'insights', href: '/insights',   label: 'Insights', icon: '✦' },
 ]
 
 export default function TabBar() {
@@ -15,14 +14,13 @@ export default function TabBar() {
     pathname === '/' ? 'log' :
     pathname.startsWith('/overview') ? 'overview' :
     pathname.startsWith('/budgets') ? 'budgets' :
-    pathname.startsWith('/insights') ? 'insights' :
     pathname.startsWith('/recurring') ? 'overview' : 'log'
 
   return (
     <div className="fixed bottom-0 left-0 right-0 mx-auto max-w-[440px] z-50
                     bg-paper-bg/[0.92] backdrop-blur-xl
                     border-t border-cream-2
-                    grid grid-cols-4
+                    grid grid-cols-3
                     pb-6 pt-2.5">
       {TABS.map(t => {
         const on = t.id === active
