@@ -1,21 +1,47 @@
 'use client'
 export const dynamic = 'force-dynamic'
+import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import TabBar from '@/components/ui/TabBar'
 import Card from '@/components/ui/Card'
 import Label from '@/components/ui/Label'
 import Amount from '@/components/ui/Amount'
-import { useExpenses } from '@/lib/hooks/useExpenses'
+import { Expense } from '@/lib/types'
 import { CATEGORY_EMOJI, PAYMENT_METHOD_EMOJI, HKD_TO_GBP } from '@/lib/constants'
 
 function currentMonth() { return new Date().toISOString().slice(0, 7) }
 
-function getUpcoming(recurring: ReturnType<typeof useExpenses>['expenses']) {
-  return recurring.slice().sort((a, b) => a.date.localeCompare(b.date)).slice(0, 5)
+function getUpcoming(recurring: Expense[]) {
+  const today = new Date().toISOString().split('T')[0]
+  const month = currentMonth()
+  const start = `${month}-01`
+  const [year, mon] = month.split('-').map(Number)
+  const end = new Date(year, mon, 0).toISOString().split('T')[0]
+  return recurring
+    .filter(e => e.date >= start && e.date <= end && e.date >= today)
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .slice(0, 5)
+}
+
+function useAllRecurring() {
+  const [recurring, setRecurring] = useState<Expense[]>([])
+  const [loading, setLoading] = useState(true)
+  const supabase = createClient()
+
+  useEffect(() => {
+    supabase
+      .from('expenses')
+      .select('*')
+      .eq('recurring', true)
+      .order('date', { ascending: false })
+      .then(({ data }) => { setRecurring(data || []); setLoading(false) }, () => setLoading(false))
+  }, [])
+
+  return { recurring, loading }
 }
 
 export default function RecurringPage() {
-  const { expenses, loading } = useExpenses(currentMonth())
-  const recurring = expenses.filter(e => e.recurring)
+  const { recurring, loading } = useAllRecurring()
 
   const totalGBP = recurring.reduce((s, e) => {
     const isRefund = e.type === 'refund' || e.type === 'cashback'
