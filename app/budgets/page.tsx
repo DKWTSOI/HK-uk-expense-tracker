@@ -5,9 +5,26 @@ import TabBar from '@/components/ui/TabBar'
 import Card from '@/components/ui/Card'
 import Label from '@/components/ui/Label'
 import Amount from '@/components/ui/Amount'
-import { useBudgets } from '@/lib/hooks/useBudgets'
+import { useBudgets, BudgetWithSpend } from '@/lib/hooks/useBudgets'
 import { CATEGORY_EMOJI } from '@/lib/constants'
 import { createClient } from '@/lib/supabase/client'
+
+function exportBudgetsCSV(budgets: BudgetWithSpend[], month: string) {
+  const header = 'Category,Cap (£),Spent (£),Remaining (£),% Used'
+  const rows = budgets.map(b => [
+    b.category,
+    b.cap_gbp.toFixed(2),
+    b.spent_gbp.toFixed(2),
+    Math.max(0, b.cap_gbp - b.spent_gbp).toFixed(2),
+    b.cap_gbp > 0 ? Math.round(b.spent_gbp / b.cap_gbp * 100) : 0,
+  ].join(','))
+  const csv = [header, ...rows].join('\n')
+  const blob = new Blob([csv], { type: 'text/csv' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url; a.download = `budgets-${month}.csv`; a.click()
+  URL.revokeObjectURL(url)
+}
 
 function currentMonth() { return new Date().toISOString().slice(0, 7) }
 
@@ -66,6 +83,16 @@ export default function BudgetsPage() {
         <h1 className="text-[15px] font-semibold text-ink tracking-[-0.01em]">Budgets</h1>
         <span className="min-w-14 text-sm text-ink-50 text-right">{monthLabel}</span>
       </div>
+      {!loading && budgets.length > 0 && (
+        <div className="flex justify-end px-[22px] pb-1">
+          <button
+            onClick={() => exportBudgetsCSV(budgets, month)}
+            className="text-[11px] text-ink-40 hover:text-accent transition-colors flex items-center gap-1"
+          >
+            ↓ Export CSV
+          </button>
+        </div>
+      )}
 
       {loading ? (
         <p className="text-ink-30 text-sm text-center py-12">Loading…</p>
@@ -99,6 +126,9 @@ export default function BudgetsPage() {
                 {budgets.map(b => {
                   const pct = b.cap_gbp > 0 ? Math.min(b.spent_gbp / b.cap_gbp * 100, 100) : 0
                   const over = b.spent_gbp > b.cap_gbp
+                  const nearLimit = !over && pct >= 80
+                  const barColor = over ? 'bg-rose' : nearLimit ? 'bg-[#c9853a]' : 'bg-accent'
+                  const amtColor = over ? 'text-rose' : nearLimit ? 'text-[#c9853a]' : 'text-ink-50'
                   return (
                     <Card key={b.id} pad="p-[14px]">
                       <div className="flex justify-between items-center mb-2.5">
@@ -107,13 +137,13 @@ export default function BudgetsPage() {
                           {b.category}
                         </span>
                         <span className="text-[13px] tabular-nums font-semibold">
-                          <span className={over ? 'text-rose' : 'text-ink-50'}>£{b.spent_gbp.toFixed(0)}</span>
+                          <span className={amtColor}>£{b.spent_gbp.toFixed(0)}</span>
                           <span className="text-ink-40 font-normal"> / £{b.cap_gbp.toFixed(0)}</span>
                         </span>
                       </div>
                       <div className="relative h-1.5 rounded-full bg-cream-2 overflow-hidden">
                         <div
-                          className={`absolute left-0 top-0 h-full rounded-full ${over ? 'bg-rose' : 'bg-accent'}`}
+                          className={`absolute left-0 top-0 h-full rounded-full ${barColor}`}
                           style={{ width: `${pct}%` }}
                         />
                         {over && (
@@ -126,6 +156,11 @@ export default function BudgetsPage() {
                       {over && (
                         <p className="text-[11px] text-rose mt-2 font-medium">
                           Over by £{(b.spent_gbp - b.cap_gbp).toFixed(0)} · {today} days in
+                        </p>
+                      )}
+                      {nearLimit && (
+                        <p className="text-[11px] mt-2 font-medium" style={{ color: '#c9853a' }}>
+                          {Math.round(pct)}% used — £{(b.cap_gbp - b.spent_gbp).toFixed(0)} left
                         </p>
                       )}
                     </Card>

@@ -7,7 +7,7 @@ import Card from './ui/Card'
 import Label from './ui/Label'
 import Pill from './ui/Pill'
 import { ExpenseType, Expense } from '@/lib/types'
-import { HKD_TO_GBP } from '@/lib/constants'
+import { useExchangeRate } from '@/lib/hooks/useExchangeRate'
 
 let lastCategories: string[] = []
 let lastPaymentMethods: string[] = []
@@ -32,6 +32,7 @@ function formatDate(iso: string) {
 }
 
 export default function LogForm() {
+  const { rate: HKD_TO_GBP, updatedAt: rateUpdatedAt } = useExchangeRate()
   const today = new Date().toISOString().split('T')[0]
   const [amount, setAmount] = useState('')
   const [currency, setCurrency] = useState<'GBP' | 'HKD'>('GBP')
@@ -49,6 +50,7 @@ export default function LogForm() {
   const [aiText, setAiText] = useState('')
   const [aiParsing, setAiParsing] = useState(false)
   const [aiResult, setAiResult] = useState<{amount?: number; currency?: 'GBP'|'HKD'; categories?: string[]; payment_methods?: string[]; notes?: string} | null>(null)
+  const [aiError, setAiError] = useState<string | null>(null)
   const [padVisible, setPadVisible] = useState(true)
   const amountRef = useRef<HTMLInputElement>(null)
 
@@ -66,10 +68,10 @@ export default function LogForm() {
 
   // Debounce AI parse
   useEffect(() => {
-    if (!aiText.trim()) { setAiResult(null); return }
+    if (!aiText.trim()) { setAiResult(null); setAiError(null); return }
     const controller = new AbortController()
     const t = setTimeout(async () => {
-      setAiParsing(true)
+      setAiParsing(true); setAiError(null)
       try {
         const res = await fetch('/api/parse', {
           method: 'POST',
@@ -77,9 +79,15 @@ export default function LogForm() {
           body: JSON.stringify({ text: aiText }),
           signal: controller.signal,
         })
-        if (res.ok) setAiResult(await res.json())
+        if (res.ok) {
+          setAiResult(await res.json())
+        } else if (res.status === 503) {
+          setAiError('AI quick-add is currently disabled.')
+        } else {
+          setAiError('Could not parse — try entering manually.')
+        }
       } catch (err) {
-        if ((err as Error).name !== 'AbortError') console.error('parse error', err)
+        if ((err as Error).name !== 'AbortError') setAiError('Could not reach the server.')
       } finally {
         setAiParsing(false)
       }
@@ -165,7 +173,14 @@ export default function LogForm() {
             />
           </div>
           {gbpPreview && (
-            <span className="text-[13px] text-ink-40 tabular-nums">{gbpPreview}</span>
+            <div className="flex flex-col">
+              <span className="text-[13px] text-ink-40 tabular-nums">{gbpPreview}</span>
+              {rateUpdatedAt && (
+                <span className="text-[10px] text-ink-30 tabular-nums">
+                  rate updated {new Date(rateUpdatedAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              )}
+            </div>
           )}
         </div>
         {/* Currency + type pills */}
@@ -233,6 +248,9 @@ export default function LogForm() {
             />
             <span className="text-ink-40 text-base">{aiParsing ? '…' : '🎙'}</span>
           </div>
+          {aiError && (
+            <p className="mt-2 text-[11.5px] text-rose">{aiError}</p>
+          )}
           {aiResult && (
             <div className="mt-3 pt-3 border-t border-dashed border-cream-3">
               <p className="text-[11px] text-ink-40 mb-2">Detected — tap to confirm</p>

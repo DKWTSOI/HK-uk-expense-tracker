@@ -3,9 +3,10 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const TABS = [
-  { id: 'log',      href: '/',           label: 'Log',      icon: '＋' },
-  { id: 'overview', href: '/overview',   label: 'Overview', icon: '◐' },
-  { id: 'budgets',  href: '/budgets',    label: 'Budgets',  icon: '◳' },
+  { id: 'log',       href: '/',           label: 'Log',       icon: '＋' },
+  { id: 'overview',  href: '/overview',   label: 'Overview',  icon: '◐' },
+  { id: 'budgets',   href: '/budgets',    label: 'Budgets',   icon: '◳' },
+  { id: 'recurring', href: '/recurring',  label: 'Recurring', icon: '↻' },
 ]
 
 export default function TabBar() {
@@ -14,13 +15,13 @@ export default function TabBar() {
     pathname === '/' ? 'log' :
     pathname.startsWith('/overview') ? 'overview' :
     pathname.startsWith('/budgets') ? 'budgets' :
-    pathname.startsWith('/recurring') ? 'overview' : 'log'
+    pathname.startsWith('/recurring') ? 'recurring' : 'log'
 
   return (
     <div className="fixed bottom-0 left-0 right-0 mx-auto max-w-[440px] z-50
                     bg-paper-bg/[0.92] backdrop-blur-xl
                     border-t border-cream-2
-                    grid grid-cols-3
+                    grid grid-cols-4
                     pb-6 pt-2.5">
       {TABS.map(t => {
         const on = t.id === active
