@@ -97,7 +97,7 @@ export default function LogWizard() {
 
   function selectPayment(method: string) {
     setPaymentMethod(method)
-    if (HK_CARD_METHODS.has(method)) setCurrency('HKD')
+    setCurrency(HK_CARD_METHODS.has(method) ? 'HKD' : 'GBP')
     setTimeout(() => setStep(3), 100)
   }
 
