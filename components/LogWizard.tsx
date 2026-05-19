@@ -4,6 +4,7 @@ import { CATEGORIES, CATEGORY_EMOJI, PAYMENT_METHOD_GROUPS, PAYMENT_METHOD_EMOJI
 import { ExpenseType } from '@/lib/types'
 import { useExchangeRate } from '@/lib/hooks/useExchangeRate'
 import { useStreak } from '@/lib/hooks/useStreak'
+import { addPending } from '@/lib/offlineQueue'
 import SuccessOverlay from './SuccessOverlay'
 import Card from './ui/Card'
 import Pill from './ui/Pill'
@@ -70,6 +71,7 @@ export default function LogWizard() {
   const [date, setDate] = useState(today)
   const [loading, setLoading] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
+  const [offlineSaved, setOfflineSaved] = useState(false)
   const [error, setError] = useState('')
 
   const evalResult = evalAmount(amount)
@@ -113,27 +115,39 @@ export default function LogWizard() {
     setLoading(false)
     setError('')
     setShowSuccess(false)
+    setOfflineSaved(false)
     setStep(0)
   }
 
   async function handleSubmit() {
     if (!evalResult || !category || !paymentMethod) return
+
+    const payload = {
+      amount: evalResult, currency, type,
+      categories: [category], payment_methods: [paymentMethod],
+      notes, recurring, date,
+    }
+
+    // Offline path — queue to IndexedDB
+    if (!navigator.onLine) {
+      try {
+        await addPending(payload)
+        setOfflineSaved(true)
+        setTimeout(resetWizard, 2200)
+      } catch {
+        setError('Could not save offline. Please try again.')
+      }
+      return
+    }
+
+    // Online path
     setLoading(true)
     setError('')
     try {
       const res = await fetch('/api/expenses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          amount: evalResult,
-          currency,
-          type,
-          categories: [category],
-          payment_methods: [paymentMethod],
-          notes,
-          recurring,
-          date,
-        }),
+        body: JSON.stringify(payload),
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
@@ -142,7 +156,14 @@ export default function LogWizard() {
         setShowSuccess(true)
       }
     } catch {
-      setError('Network error. Please try again.')
+      // Fetch itself threw — likely no connectivity despite navigator.onLine
+      try {
+        await addPending(payload)
+        setOfflineSaved(true)
+        setTimeout(resetWizard, 2200)
+      } catch {
+        setError('Network error. Please try again.')
+      }
     } finally {
       setLoading(false)
     }
@@ -151,6 +172,18 @@ export default function LogWizard() {
   return (
     <div className="bg-paper-bg">
       {showSuccess && <SuccessOverlay onDone={resetWizard} />}
+
+      {/* Offline saved overlay */}
+      {offlineSaved && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3"
+             style={{ background: 'rgba(250,246,239,0.95)' }}>
+          <div className="w-[72px] h-[72px] rounded-full bg-ink-50 flex items-center justify-center text-3xl">
+            📶
+          </div>
+          <p className="text-[17px] font-semibold text-ink tracking-[-0.01em]">Saved offline</p>
+          <p className="text-[13px] text-ink-40">Will sync automatically when back online</p>
+        </div>
+      )}
 
       {/* Chrome header — static, outside sliding track */}
       <div className="flex items-center justify-between px-[22px] pt-14 pb-3" style={{ minHeight: 72 }}>

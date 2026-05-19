@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Inter, Fraunces } from 'next/font/google'
 import './globals.css'
 import SwRegister from './sw-register'
+import SyncManager from '@/components/SyncManager'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
 const fraunces = Fraunces({
@@ -33,6 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className={`${inter.variable} ${fraunces.variable} font-sans text-ink bg-paper-bg min-h-screen`}>
         <SwRegister />
+        <SyncManager />
         <div className="mx-auto max-w-[440px] min-h-screen relative">
           {children}
         </div>
