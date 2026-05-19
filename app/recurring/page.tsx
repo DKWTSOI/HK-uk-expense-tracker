@@ -26,9 +26,9 @@ function getUpcoming(recurring: Expense[]) {
 function useAllRecurring() {
   const [recurring, setRecurring] = useState<Expense[]>([])
   const [loading, setLoading] = useState(true)
-  const supabase = createClient()
 
   useEffect(() => {
+    const supabase = createClient()
     supabase
       .from('expenses')
       .select('*')

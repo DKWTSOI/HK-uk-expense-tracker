@@ -20,13 +20,9 @@ export default function SuccessOverlay({ onDone }: { onDone: () => void }) {
   const [phase, setPhase] = useState<Phase>('hidden')
 
   useEffect(() => {
-    let rafId: number
-    let t1: ReturnType<typeof setTimeout>
-    let t2: ReturnType<typeof setTimeout>
-
-    rafId = requestAnimationFrame(() => setPhase('shown'))
-    t1 = setTimeout(() => setPhase('out'), 1500)
-    t2 = setTimeout(onDone, 1900)
+    const rafId = requestAnimationFrame(() => setPhase('shown'))
+    const t1 = setTimeout(() => setPhase('out'), 1500)
+    const t2 = setTimeout(onDone, 1900)
 
     return () => {
       cancelAnimationFrame(rafId)

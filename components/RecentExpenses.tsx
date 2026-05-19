@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Expense } from '@/lib/types'
 import { CATEGORY_EMOJI } from '@/lib/constants'
@@ -13,16 +13,17 @@ export default function RecentExpenses({ refreshKey, onPrefill }: Props) {
   const [expenses, setExpenses] = useState<Expense[]>([])
   const supabase = createClient()
 
-  async function load() {
+  const load = useCallback(async () => {
     const { data } = await supabase
       .from('expenses')
       .select('*')
       .order('created_at', { ascending: false })
       .limit(10)
     setExpenses(data || [])
-  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshKey])
 
-  useEffect(() => { load() }, [refreshKey])
+  useEffect(() => { load() }, [load])
 
   async function deleteExpense(id: string) {
     await fetch('/api/expenses', {
