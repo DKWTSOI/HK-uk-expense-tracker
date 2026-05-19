@@ -8,6 +8,10 @@ import SuccessOverlay from './SuccessOverlay'
 import Card from './ui/Card'
 import Pill from './ui/Pill'
 
+const HK_CARD_METHODS = new Set(
+  PAYMENT_METHOD_GROUPS.find(g => g.label === 'HK Cards')?.methods ?? []
+)
+
 function evalAmount(expr: string): number | null {
   const clean = expr.replace(/[^0-9+\-*.]/g, '')
   if (!clean) return null
@@ -93,6 +97,7 @@ export default function LogWizard() {
 
   function selectPayment(method: string) {
     setPaymentMethod(method)
+    if (HK_CARD_METHODS.has(method)) setCurrency('HKD')
     setTimeout(() => setStep(3), 100)
   }
 
