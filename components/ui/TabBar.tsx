@@ -3,16 +3,18 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const TABS = [
-  { id: 'log',       href: '/',           label: 'Log',       icon: '＋' },
-  { id: 'overview',  href: '/overview',   label: 'Overview',  icon: '◐' },
-  { id: 'budgets',   href: '/budgets',    label: 'Budgets',   icon: '◳' },
-  { id: 'recurring', href: '/recurring',  label: 'Recurring', icon: '↻' },
+  { id: 'log',       href: '/',           label: 'Log',      icon: '＋' },
+  { id: 'history',   href: '/history',    label: 'History',  icon: '◫' },
+  { id: 'overview',  href: '/overview',   label: 'Overview', icon: '◐' },
+  { id: 'budgets',   href: '/budgets',    label: 'Budgets',  icon: '◳' },
+  { id: 'recurring', href: '/recurring',  label: 'Recurring',icon: '↻' },
 ]
 
 export default function TabBar() {
   const pathname = usePathname()
   const active =
     pathname === '/' ? 'log' :
+    pathname.startsWith('/history') ? 'history' :
     pathname.startsWith('/overview') ? 'overview' :
     pathname.startsWith('/budgets') ? 'budgets' :
     pathname.startsWith('/recurring') ? 'recurring' : 'log'
@@ -21,7 +23,7 @@ export default function TabBar() {
     <div className="fixed bottom-0 left-0 right-0 mx-auto max-w-[440px] z-50
                     bg-paper-bg/[0.92] backdrop-blur-xl
                     border-t border-cream-2
-                    grid grid-cols-4
+                    grid grid-cols-5
                     pb-6 pt-2.5">
       {TABS.map(t => {
         const on = t.id === active
